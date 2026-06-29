@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// IMPORTANT: always use `prisma migrate dev` / `migrate deploy`, never `db push`.
+// `db push` diffs the database directly against this file and ignores migration
+// history — it would silently drop the hand-written CHECK/EXCLUDE constraints added
+// via raw SQL in prisma/migrations/*_add_check_and_exclude_constraints, since those
+// constraints have no representation in this declarative schema.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// NOTE: Prisma 7 removed `url` from the datasource block entirely (hard validation
+// error, not just optional) — the connection string lives in prisma.config.ts for
+// migrate/CLI, and is passed explicitly via a driver `adapter` to
+// `new PrismaClient({ adapter })` at runtime. See lib/prisma.ts.
+datasource db {
+  provider = "postgresql"
+}
+
+enum DimensionType {
+  FIXED
+  PARAMETRIC
+}
+
+enum ConfigurationStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum ImageKind {
+  FRONT // texture for 3D box front face + 2D elevation icon
+  ICON // thumbnail for catalog/picker lists
+  GALLERY // reference photos only, not used in rendering
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  category      String
+  description   String?
+  dimensionType DimensionType @default(FIXED)
+
+  // depth is required for every product, FIXED or PARAMETRIC — no product in the
+  // catalog has a computed or variable depth. width/height stay nullable: a FIXED
+  // product sets them directly; a PARAMETRIC product (today: "Cell Boxes") computes
+  // them at read time from parametricConfig (lib/layout-engine/dimensions.ts) and
+  // leaves these columns null. A raw-SQL CHECK constraint, "Product_dimension_consistency"
+  // (see migrations/20260627121500_fix_dimension_consistency_for_cell_boxes), backs this
+  // duality at the DB level too, since it depends on the sibling dimensionType column
+  // and can't be expressed as a plain nullable/non-nullable column: FIXED rows must
+  // have width/height/parametricConfig set accordingly, and PARAMETRIC rows must have
+  // width/height null plus a parametricConfig containing all 4 of
+  // columns/drawersPerColumn/rows/topOption (presence only — internal correctness of
+  // each setting is left to ParametricConfigSchema at the application layer).
+  width  Float?
+  height Float?
+  depth  Float
+
+  // PARAMETRIC-only (null when FIXED). Today there is exactly one parametric product
+  // ("Cell Boxes"), whose settings are interdependent rather than a generic axis list,
+  // so the shape is bespoke and named:
+  // {
+  //   columns:          { paramName, label, min, max, defaultValue: number },
+  //   drawersPerColumn: { paramName, label, min, max, defaultValue: number },
+  //   rows:             { paramName, label, min, max, defaultValue: number },
+  //   topOption: { paramName, label, defaultEnabled: boolean,
+  //                heightParamName, heightLabel, minHeight, maxHeight, defaultHeight: number },
+  // }
+  // width/height are derived in code (lib/layout-engine/dimensions.ts) from columns,
+  // drawersPerColumn, rows, and topOption — not stored as a formula here. depth lives
+  // on the scalar column above, not in this JSON.
+  // Fine-grained shape validated at the application layer by ParametricConfigSchema
+  // (lib/validation/schemas.ts).
+  parametricConfig Json?
+
+  defaultColor String?
+  isActive     Boolean @default(true)
+
+  images ProductImage[]
+  items  WallConfigurationItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
+model ProductImage {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  kind      ImageKind @default(FRONT)
+  isPrimary Boolean   @default(false)
+  width     Int?
+  height    Int?
+  createdAt DateTime  @default(now())
+
+  @@index([productId])
+}
+
+model WallConfiguration {
+  id         String              @id @default(cuid())
+  name       String
+  wallWidth  Float
+  wallHeight Float
+  status     ConfigurationStatus @default(DRAFT)
+  notes      String?
+
+  items WallConfigurationItem[]
+
+  // Cached top-level layout diagnostics so reopening a saved configuration doesn't
+  // require recomputation. Per-instance placements live in PlacedItemInstance rows
+  // (below), not duplicated here — only the small aggregate result is cached as
+  // plain columns instead of one big JSON blob.
+  fits             Boolean?
+  usedWidth        Float?
+  usedHeight       Float?
+  warnings         Json? // LayoutWarning[] — small, variable-shape, not worth normalizing
+  layoutComputedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WallConfigurationItem {
+  id              String            @id @default(cuid())
+  configurationId String
+  configuration   WallConfiguration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  productId       String
+
+  // Explicit Restrict (matches Postgres's own default, written out so the intent is
+  // visible in the schema): a Product referenced by any quote/configuration cannot be
+  // hard-deleted. The admin "delete" action should catch the resulting P2003
+  // FK-violation error and either show "N configurations use this product" or steer
+  // the user to deactivate (isActive = false) instead — see Phase 5.
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  // Requested quantity (the input). May exceed placedItemInstances.length if some
+  // units didn't fit on the wall — that gap *is* the "unplaced" count, no separate
+  // tracking needed.
+  quantity Int @default(1)
+
+  // For parametric products: chosen values keyed by paramName, e.g. { "columns": 3, "drawersPerColumn": 5 }.
+  // Null for fixed products. Stays JSON deliberately: paramName is product-defined and
+  // open-ended (different products have different parameter sets), so fixed columns
+  // don't fit here the way they do for position/size below.
+  params Json?
+
+  sortOrder Int @default(0)
+
+  placedItemInstances PlacedItemInstance[]
+
+  createdAt DateTime @default(now())
+
+  @@index([configurationId])
+  @@index([productId])
+}
+
+// One row per physical unit (quantity expanded), produced by the layout engine.
+model PlacedItemInstance {
+  id                  String                @id @default(cuid())
+  configurationItemId String
+  configurationItem   WallConfigurationItem @relation(fields: [configurationItemId], references: [id], onDelete: Cascade)
+
+  // Denormalized pointer to the owning WallConfiguration (not a separate Prisma
+  // relation — kept as a plain column so it can't be reassigned independently of
+  // configurationItem). Exists solely because the no-overlap EXCLUDE constraint
+  // (added via a follow-up raw-SQL migration, since Prisma has no declarative syntax
+  // for EXCLUDE) must partition "no overlap" by configuration, and Postgres EXCLUDE
+  // constraints can only reference literal columns on the constrained table, not
+  // columns reached through a join. NOT added for query-performance reasons — the
+  // indexed configurationItemId join is already cheap at this app's scale.
+  // A DB trigger (added in migration 20260625100824_add_integrity_safeguards) always
+  // re-derives this value from configurationItemId on insert/update, so it cannot
+  // drift out of sync with the real owning configuration regardless of what the
+  // application writes here.
+  configurationId String
+
+  // Stable across layout recomputes: "<configurationItemId>#<unitIndex>" where
+  // unitIndex is this unit's position (0..quantity-1) within its line item,
+  // independent of where it lands after packing. The persistence layer upserts by
+  // this key (not delete-all/insert-all) so a wall-size edit doesn't mint new row
+  // ids for units that still logically exist — otherwise client-side state (e.g.
+  // "which shelf is selected" in the 3D viewer) would reset on every recompute.
+  instanceKey String @unique
+
+  // Snapshot of resolved size (meters) at the moment the layout was computed — avoids
+  // re-deriving from Product.parametricConfig + params on every render, and keeps
+  // historical quotes accurate even if the product's catalog dimensions change later.
+  actualWidth  Float
+  actualHeight Float
+  actualDepth  Float
+
+  // Position of this unit's bottom-left-front corner within the wall, in meters,
+  // relative to the wall's bottom-left corner (output of the packing pass).
+  positionX Float
+  positionY Float
+  positionZ Float @default(0)
+
+  rowIndex  Int @default(0)
+  sortOrder Int @default(0) // ordering among siblings expanded from the same line item
+
+  createdAt DateTime @default(now())
+
+  @@index([configurationItemId])
+  @@index([configurationId])
+}
