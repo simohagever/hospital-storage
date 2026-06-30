@@ -1,7 +1,9 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { OrbitControls } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
+import type { WebGLRenderer } from "three";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 import { FloorPlane } from "./FloorPlane";
 import { ProductMesh } from "./ProductMesh";
@@ -14,42 +16,118 @@ interface SceneProps {
   usedWidth: number;
 }
 
+// Runs inside the Canvas to give the parent access to the WebGL renderer and
+// the invalidate function (needed to force a fresh frame before a snapshot).
+function CanvasCapture({
+  onMount,
+}: {
+  onMount: (gl: WebGLRenderer, invalidate: () => void) => void;
+}) {
+  const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    onMount(gl as unknown as WebGLRenderer, invalidate);
+  }, [gl, invalidate, onMount]);
+  return null;
+}
+
 export function Scene({ placements, wallWidth, wallHeight, usedWidth }: SceneProps) {
+  const [showDimensions, setShowDimensions] = useState(false);
+  const glRef = useRef<WebGLRenderer | null>(null);
+  const invalidateRef = useRef<(() => void) | null>(null);
+
   const maxDim = Math.max(wallWidth, wallHeight);
   const cameraZ = maxDim * 1.5;
-  // Same centering offset as the 2D elevation drawing — items appear centred
-  // on the wall rather than left-aligned against its left edge.
   const centerOffsetX = (wallWidth - usedWidth) / 2;
 
+  const handleMount = useCallback(
+    (gl: WebGLRenderer, inv: () => void) => {
+      glRef.current = gl;
+      invalidateRef.current = inv;
+    },
+    [], // refs are stable — no deps needed
+  );
+
+  function handleSnapshot() {
+    // Schedule a fresh render, then capture after two animation frames:
+    // the first rAF is when r3f renders the new frame, the second fires
+    // after it has completed — more reliable than a fixed setTimeout.
+    invalidateRef.current?.();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        glRef.current?.domElement.toBlob(
+          (blob) => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "wall-configuration-3d.png";
+            a.click();
+            URL.revokeObjectURL(url);
+          },
+          "image/png",
+        );
+      });
+    });
+  }
+
   return (
-    <div style={{ width: "100%", height: 500 }}>
-      <Canvas
-        gl={{ preserveDrawingBuffer: true }}
-        frameloop="demand"
-        camera={{
-          position: [wallWidth / 2, wallHeight / 2, cameraZ],
-          fov: 45,
-          near: 0.01,
-          far: 1000,
-        }}
-      >
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 10, 5]} intensity={0.8} />
+    <div>
+      <div className="mb-3 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setShowDimensions((v) => !v)}
+          className={`rounded border px-3 py-1.5 text-sm ${
+            showDimensions
+              ? "border-zinc-800 bg-zinc-800 text-white"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+          }`}
+        >
+          {showDimensions ? "Hide dimensions" : "Show dimensions"}
+        </button>
+        <button
+          type="button"
+          onClick={handleSnapshot}
+          className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50"
+        >
+          Download PNG
+        </button>
+      </div>
 
-        {/* enableDamping removed — camera stops immediately on release,
-            which works correctly with frameloop="demand" */}
-        <OrbitControls
-          makeDefault
-          target={[wallWidth / 2, wallHeight / 2, 0]}
-        />
+      <div style={{ width: "100%", height: 500 }}>
+        <Canvas
+          gl={{ preserveDrawingBuffer: true }}
+          frameloop="demand"
+          camera={{
+            position: [wallWidth / 2, wallHeight / 2, cameraZ],
+            fov: 45,
+            near: 0.01,
+            far: 1000,
+          }}
+        >
+          <CanvasCapture onMount={handleMount} />
 
-        <WallPlane wallWidth={wallWidth} wallHeight={wallHeight} />
-        <FloorPlane wallWidth={wallWidth} />
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[5, 10, 5]} intensity={0.8} />
 
-        {placements.map((p) => (
-          <ProductMesh key={p.instanceKey} placement={p} centerOffsetX={centerOffsetX} />
-        ))}
-      </Canvas>
+          <OrbitControls
+            makeDefault
+            target={[wallWidth / 2, wallHeight / 2, 0]}
+          />
+
+          <WallPlane wallWidth={wallWidth} wallHeight={wallHeight} />
+          <FloorPlane wallWidth={wallWidth} />
+
+          {placements.map((p) => (
+            <ProductMesh
+              key={p.instanceKey}
+              placement={p}
+              centerOffsetX={centerOffsetX}
+              showDimensions={showDimensions}
+            />
+          ))}
+        </Canvas>
+      </div>
     </div>
   );
 }
