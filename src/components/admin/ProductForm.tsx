@@ -138,35 +138,43 @@ export function ProductForm({ product }: ProductFormProps) {
     const url = isEdit ? `/api/products/${product.id}` : "/api/products";
     const method = isEdit ? "PATCH" : "POST";
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      setSubmitError(json.error ?? "Failed to save product");
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setSubmitError(json.error ?? "Failed to save product");
+        return;
+      }
+      // router.push to a Server Component page re-fetches data automatically —
+      // no router.refresh() needed.
+      router.push("/products");
+    } catch {
+      setSubmitError("Network error — please try again.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    router.push("/products");
-    router.refresh();
   }
 
   async function handleDelete() {
     if (!isEdit || !confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
     setDeleting(true);
-    const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      setSubmitError(json.error ?? "Failed to delete product");
+    try {
+      const res = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setSubmitError(json.error ?? "Failed to delete product");
+        return;
+      }
+      router.push("/products");
+    } catch {
+      setSubmitError("Network error — please try again.");
+    } finally {
       setDeleting(false);
-      return;
     }
-    router.push("/products");
-    router.refresh();
   }
 
   return (

@@ -65,13 +65,15 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
         {configuration.wallWidth.toFixed(2)}m × {configuration.wallHeight.toFixed(2)}m wall
       </p>
 
-      <div
-        className={`mt-4 inline-block rounded border px-3 py-1.5 text-sm font-medium ${
-          configuration.fits ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800"
-        }`}
-      >
-        {configuration.fits ? "Fits" : "Doesn't fit"}
-      </div>
+      {configuration.fits !== null && (
+        <div
+          className={`mt-4 inline-block rounded border px-3 py-1.5 text-sm font-medium ${
+            configuration.fits ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800"
+          }`}
+        >
+          {configuration.fits ? "Fits" : "Doesn't fit"}
+        </div>
+      )}
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 p-4">
         <ElevationSvg
