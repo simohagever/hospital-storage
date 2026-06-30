@@ -34,6 +34,11 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   const svgWidth = wallWidthPx + MARGIN_LEFT + MARGIN_RIGHT;
   const svgHeight = wallHeightPx + MARGIN_TOP + MARGIN_BOTTOM;
 
+  // Shift the entire layout so it appears centered on the wall rather than
+  // left-aligned. The packing algorithm always starts at x=0, but physically
+  // shelves look more natural when centred in the available space.
+  const centerOffsetPx = ((wallWidth - usedWidth) / 2) * pxPerMeter;
+
   function toSvgY(domainY: number, height: number): number {
     return (wallHeight - (domainY + height)) * pxPerMeter;
   }
@@ -44,7 +49,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
         <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="#fafafa" stroke="#52525b" strokeWidth={1.5} />
 
         {placements.map((p) => {
-          const x = p.positionX * pxPerMeter;
+          const x = centerOffsetPx + p.positionX * pxPerMeter;
           const y = toSvgY(p.positionY, p.actualHeight);
           const w = p.actualWidth * pxPerMeter;
           const h = p.actualHeight * pxPerMeter;
@@ -74,9 +79,9 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
         })}
 
         <DimensionLine
-          x1={0}
+          x1={centerOffsetPx}
           y1={wallHeightPx + 20}
-          x2={usedWidth * pxPerMeter}
+          x2={centerOffsetPx + usedWidth * pxPerMeter}
           y2={wallHeightPx + 20}
           label={`${usedWidth.toFixed(2)}m used`}
           dashed
