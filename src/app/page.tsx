@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { DeleteConfigButton } from "@/components/admin/DeleteConfigButton";
 
 export default async function HomePage() {
   const configurations = await prisma.wallConfiguration.findMany({
@@ -52,19 +53,15 @@ export default async function HomePage() {
         ) : (
           <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200">
             {configurations.map((config) => (
-              <li key={config.id}>
-                <Link
-                  href={`/configurations/${config.id}`}
-                  className="flex items-center justify-between gap-4 p-4 hover:bg-zinc-50"
-                >
-                  <div>
-                    <p className="font-medium">{config.name}</p>
-                    <p className="mt-0.5 text-sm text-zinc-500">
-                      {config.wallWidth.toFixed(2)}m × {config.wallHeight.toFixed(2)}m &middot;{" "}
-                      {config._count.items} product line{config._count.items === 1 ? "" : "s"}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
+              <li key={config.id} className="flex items-center justify-between gap-4 p-4">
+                <Link href={`/configurations/${config.id}`} className="flex-1 hover:underline">
+                  <p className="font-medium">{config.name}</p>
+                  <p className="mt-0.5 text-sm text-zinc-500">
+                    {config.wallWidth.toFixed(2)}m × {config.wallHeight.toFixed(2)}m &middot;{" "}
+                    {config._count.items} product line{config._count.items === 1 ? "" : "s"}
+                  </p>
+                </Link>
+                <div className="flex shrink-0 items-center gap-3">
                     {config.fits !== null && (
                       <span
                         className={`rounded border px-2 py-0.5 text-xs font-medium ${
@@ -82,8 +79,8 @@ export default async function HomePage() {
                     >
                       {config.createdAt.toISOString().slice(0, 10)}
                     </time>
+                    <DeleteConfigButton id={config.id} name={config.name} />
                   </div>
-                </Link>
               </li>
             ))}
           </ul>
