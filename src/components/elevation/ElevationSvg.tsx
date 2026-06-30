@@ -4,10 +4,10 @@ import { DimensionLine } from "./DimensionLine";
 const MARGIN_LEFT = 60;
 const MARGIN_TOP = 20;
 const MARGIN_RIGHT = 20;
-const MARGIN_BOTTOM = 70;
-const TARGET_WALL_WIDTH_PX = 1400;
+const MARGIN_BOTTOM = 100;
+const TARGET_WALL_WIDTH_PX = 2400;
 const MIN_PX_PER_METER = 20;
-const MAX_PX_PER_METER = 500;
+const MAX_PX_PER_METER = 900;
 // Below these rendered dimensions, a name + dimension label can no longer fit
 // without overlapping each other — better to omit them than show an unreadable
 // jumble. Both width AND height are checked: a wide-but-short item can fail on
@@ -38,13 +38,16 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   // left-aligned. The packing algorithm always starts at x=0, but physically
   // shelves look more natural when centred in the available space.
   const centerOffsetPx = ((wallWidth - usedWidth) / 2) * pxPerMeter;
+  const labelFontSize = Math.min(28, Math.max(10, Math.round(pxPerMeter * 0.04)));
+  const dimFontSize = Math.min(18, Math.max(8, Math.round(pxPerMeter * 0.026)));
+  const dimLineFontSize = Math.min(16, Math.max(11, Math.round(pxPerMeter * 0.022)));
 
   function toSvgY(domainY: number, height: number): number {
     return (wallHeight - (domainY + height)) * pxPerMeter;
   }
 
   return (
-    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width="100%" style={{ maxWidth: svgWidth, height: "auto" }}>
+    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width={svgWidth} height={svgHeight} style={{ display: "block" }}>
       <g transform={`translate(${MARGIN_LEFT}, ${MARGIN_TOP})`}>
         <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="white" stroke="#52525b" strokeWidth={1.5} />
 
@@ -64,12 +67,12 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                     y={y + h / 2}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize={Math.min(11, w / 6)}
+                    fontSize={Math.min(labelFontSize, w / 6)}
                     fill="#27272a"
                   >
                     {p.productName}
                   </text>
-                  <text x={x + w / 2} y={y + h - 4} textAnchor="middle" fontSize={9} fill="#52525b">
+                  <text x={x + w / 2} y={y + h - dimFontSize * 0.4} textAnchor="middle" fontSize={dimFontSize} fill="#52525b">
                     {p.actualWidth.toFixed(2)}×{p.actualHeight.toFixed(2)}m
                   </text>
                 </>
@@ -80,21 +83,30 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
 
         <DimensionLine
           x1={centerOffsetPx}
-          y1={wallHeightPx + 20}
+          y1={wallHeightPx + 25}
           x2={centerOffsetPx + usedWidth * pxPerMeter}
-          y2={wallHeightPx + 20}
+          y2={wallHeightPx + 25}
           label={`${usedWidth.toFixed(2)}m used`}
           dashed
           color="#16a34a"
+          fontSize={dimLineFontSize}
         />
         <DimensionLine
           x1={0}
-          y1={wallHeightPx + 45}
+          y1={wallHeightPx + 62}
           x2={wallWidthPx}
-          y2={wallHeightPx + 45}
+          y2={wallHeightPx + 62}
           label={`${wallWidth.toFixed(2)}m wall`}
+          fontSize={dimLineFontSize}
         />
-        <DimensionLine x1={-30} y1={0} x2={-30} y2={wallHeightPx} label={`${wallHeight.toFixed(2)}m`} />
+        <DimensionLine
+          x1={-30}
+          y1={0}
+          x2={-30}
+          y2={wallHeightPx}
+          label={`${wallHeight.toFixed(2)}m`}
+          fontSize={dimLineFontSize}
+        />
       </g>
     </svg>
   );
