@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { UpdateLayoutButton } from "@/components/admin/UpdateLayoutButton";
 import { z } from "zod";
 import { ElevationSvg } from "@/components/elevation/ElevationSvg";
 import { SceneLoader } from "@/components/viewer3d/SceneLoader";
@@ -61,15 +60,10 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
 
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{configuration.name}</h1>
-          <p className="mt-1 text-zinc-600">
-            {configuration.wallWidth.toFixed(2)}m × {configuration.wallHeight.toFixed(2)}m wall
-          </p>
-        </div>
-        <UpdateLayoutButton configurationId={id} />
-      </div>
+      <h1 className="text-2xl font-bold">{configuration.name}</h1>
+      <p className="mt-1 text-zinc-600">
+        {configuration.wallWidth.toFixed(2)}m × {configuration.wallHeight.toFixed(2)}m wall
+      </p>
 
       <div
         className={`mt-4 inline-block rounded border px-3 py-1.5 text-sm font-medium ${

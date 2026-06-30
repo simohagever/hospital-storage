@@ -10,8 +10,18 @@ import { WallDimensionsForm } from "@/components/configurator/WallDimensionsForm
 import { useLiveLayout, type SelectedItem } from "@/hooks/useLiveLayout";
 import { MAX_WALL_DIMENSION_METERS } from "@/lib/validation/schemas";
 
+interface InitialData {
+  name: string;
+  wallWidth: number;
+  wallHeight: number;
+  items: SelectedItem[];
+}
+
 interface ConfiguratorClientProps {
   products: Product[];
+  // Provided when editing an existing configuration.
+  configurationId?: string;
+  initialData?: InitialData;
 }
 
 type SubmitState = { status: "idle" } | { status: "submitting" } | { status: "error"; message: string };
@@ -23,12 +33,13 @@ type SubmitState = { status: "idle" } | { status: "submitting" } | { status: "er
 // were ever served over plain HTTP).
 let nextTempId = 0;
 
-export function ConfiguratorClient({ products }: ConfiguratorClientProps) {
+export function ConfiguratorClient({ products, configurationId, initialData }: ConfiguratorClientProps) {
+  const isEdit = !!configurationId;
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [wallWidth, setWallWidth] = useState(4);
-  const [wallHeight, setWallHeight] = useState(2.6);
-  const [items, setItems] = useState<SelectedItem[]>([]);
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [wallWidth, setWallWidth] = useState(initialData?.wallWidth ?? 4);
+  const [wallHeight, setWallHeight] = useState(initialData?.wallHeight ?? 2.6);
+  const [items, setItems] = useState<SelectedItem[]>(initialData?.items ?? []);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
 
   const productsById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
@@ -55,22 +66,26 @@ export function ConfiguratorClient({ products }: ConfiguratorClientProps) {
 
   async function handleSubmit() {
     setSubmitState({ status: "submitting" });
+    const payload = {
+      name,
+      wallWidth,
+      wallHeight,
+      items: items.map((item, index) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        params: item.params,
+        sortOrder: index,
+      })),
+    };
     try {
-      const response = await fetch("/api/configurations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          wallWidth,
-          wallHeight,
-          items: items.map((item, index) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            params: item.params,
-            sortOrder: index,
-          })),
-        }),
-      });
+      const response = await fetch(
+        isEdit ? `/api/configurations/${configurationId}` : "/api/configurations",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const body = await response.json();
       if (!response.ok) {
         setSubmitState({ status: "error", message: body.error ?? "Failed to save configuration" });
@@ -112,7 +127,9 @@ export function ConfiguratorClient({ products }: ConfiguratorClientProps) {
           onClick={handleSubmit}
           className="w-full rounded bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
         >
-          {submitState.status === "submitting" ? "Creating…" : "Create configuration"}
+          {submitState.status === "submitting"
+            ? isEdit ? "Saving…" : "Creating…"
+            : isEdit ? "Save changes" : "Create configuration"}
         </button>
 
         {submitState.status === "error" && <p className="text-sm text-red-600">{submitState.message}</p>}

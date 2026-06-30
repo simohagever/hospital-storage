@@ -79,6 +79,12 @@ export default async function HomePage() {
                     >
                       {config.createdAt.toISOString().slice(0, 10)}
                     </time>
+                    <Link
+                      href={`/configurations/${config.id}/edit`}
+                      className="text-sm text-zinc-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
                     <DeleteConfigButton id={config.id} name={config.name} />
                   </div>
               </li>
