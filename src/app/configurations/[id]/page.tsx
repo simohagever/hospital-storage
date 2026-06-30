@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ElevationSvg } from "@/components/elevation/ElevationSvg";
 import { SceneLoader } from "@/components/viewer3d/SceneLoader";
+import { computeInternalGrid } from "@/lib/layout-engine/computeInternalGrid";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 import { prisma } from "@/lib/prisma";
-import { LayoutWarningSchema } from "@/lib/validation/schemas";
+import { LayoutWarningSchema, ParametricConfigSchema } from "@/lib/validation/schemas";
 
 export default async function ConfigurationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,8 +25,19 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
     notFound();
   }
 
-  const placements: PlacedInstance[] = configuration.items.flatMap((item) =>
-    item.placedItemInstances.map((instance) => ({
+  const placements: PlacedInstance[] = configuration.items.flatMap((item) => {
+    // Compute the internal structural grid for parametric items so the 2D elevation
+    // can draw column/row dividers and annotate each section's dimensions.
+    const parsedConfig = ParametricConfigSchema.safeParse(item.product.parametricConfig);
+    const grid =
+      item.product.dimensionType === "PARAMETRIC" && parsedConfig.success
+        ? computeInternalGrid(
+            parsedConfig.data,
+            item.params as Record<string, number> | null,
+          )
+        : undefined;
+
+    return item.placedItemInstances.map((instance) => ({
       instanceKey: instance.instanceKey,
       configItemId: instance.configurationItemId,
       productId: item.productId,
@@ -39,8 +51,9 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
       actualHeight: instance.actualHeight,
       actualDepth: instance.actualDepth,
       defaultColor: item.product.defaultColor ?? undefined,
-    })),
-  );
+      grid,
+    }));
+  });
 
   const warningsParsed = z.array(LayoutWarningSchema).safeParse(configuration.warnings);
   const warnings = warningsParsed.success ? warningsParsed.data : [];

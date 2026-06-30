@@ -17,6 +17,24 @@ export interface LayoutInputItem {
   sortOrder: number;
 }
 
+// Internal structural breakdown for a placed parametric item.
+// Columns run left-to-right; rows run bottom-to-top.
+// 'drawers' sections represent the full drawer block as ONE section —
+// individual drawer cells and their 0.01m gaps are not subdivided.
+export type GridSectionKind = "col-divider" | "column" | "row-divider" | "drawers" | "top-shelf";
+
+export interface GridSection {
+  offset: number; // metres from the item's left edge (columns) or bottom edge (rows)
+  size: number;   // metres
+  kind: GridSectionKind;
+  drawerHeight?: number; // present only on 'drawers' sections: height of ONE drawer
+}
+
+export interface InternalGrid {
+  columns: GridSection[];
+  rows: GridSection[];
+}
+
 export interface PlacedInstance {
   instanceKey: string;
   configItemId: string;
@@ -32,6 +50,7 @@ export interface PlacedInstance {
   actualDepth: number;
   imageUrl?: string;
   defaultColor?: string;
+  grid?: InternalGrid; // populated by the results page for parametric items
 }
 
 export interface PlacedRow {

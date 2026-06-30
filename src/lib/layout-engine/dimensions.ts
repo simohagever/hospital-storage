@@ -12,11 +12,11 @@ interface ProductDimensionInput {
 // Physical material constants for the Cell Boxes product (meters). Column/row
 // dividers are real strips that end-cap the stack (n units -> n+1 strips); drawer
 // gaps are empty clearance between drawers only (n units -> n-1 gaps, no end caps).
-const COLUMN_WIDTH = 0.332;
-const COLUMN_DIVIDER = 0.03;
-const DRAWER_HEIGHT = 0.1;
-const DRAWER_GAP = 0.01;
-const ROW_DIVIDER = 0.03;
+export const COLUMN_WIDTH = 0.332;
+export const COLUMN_DIVIDER = 0.03;
+export const DRAWER_HEIGHT = 0.1;
+export const DRAWER_GAP = 0.01;
+export const ROW_DIVIDER = 0.03;
 
 // params comes from WallConfigurationItem.params, an unvalidated Json? column — so a
 // stray NaN or non-numeric value can reach here. Comparisons against NaN are always
