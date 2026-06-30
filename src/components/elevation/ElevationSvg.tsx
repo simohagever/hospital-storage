@@ -5,9 +5,9 @@ const MARGIN_LEFT = 60;
 const MARGIN_TOP = 20;
 const MARGIN_RIGHT = 20;
 const MARGIN_BOTTOM = 70;
-const TARGET_WALL_WIDTH_PX = 800;
+const TARGET_WALL_WIDTH_PX = 1400;
 const MIN_PX_PER_METER = 20;
-const MAX_PX_PER_METER = 200;
+const MAX_PX_PER_METER = 500;
 // Below these rendered dimensions, a name + dimension label can no longer fit
 // without overlapping each other — better to omit them than show an unreadable
 // jumble. Both width AND height are checked: a wide-but-short item can fail on
@@ -46,7 +46,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   return (
     <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width="100%" style={{ maxWidth: svgWidth, height: "auto" }}>
       <g transform={`translate(${MARGIN_LEFT}, ${MARGIN_TOP})`}>
-        <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="#fafafa" stroke="#52525b" strokeWidth={1.5} />
+        <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="white" stroke="#52525b" strokeWidth={1.5} />
 
         {placements.map((p) => {
           const x = centerOffsetPx + p.positionX * pxPerMeter;
