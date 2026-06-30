@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ConfiguratorClient } from "@/app/configurations/new/ConfiguratorClient";
 import type { SelectedItem } from "@/hooks/useLiveLayout";
@@ -27,12 +28,18 @@ export default async function EditConfigurationPage({
     orderBy: { name: "asc" },
   });
 
+  // Validate stored params with zod instead of blindly casting — if someone
+  // stored non-numeric values in the DB the edit page would silently pass bad
+  // state to useLiveLayout; with safeParse we fall back to null (defaults) instead.
+  const paramsSchema = z.record(z.string(), z.number()).nullable();
   let counter = 0;
   const initialItems: SelectedItem[] = configuration.items.map((item) => ({
     tempId: `existing-${counter++}`,
     productId: item.productId,
     quantity: item.quantity,
-    params: item.params as Record<string, number> | null,
+    params: paramsSchema.safeParse(item.params).success
+      ? (item.params as Record<string, number> | null)
+      : null,
   }));
 
   return (

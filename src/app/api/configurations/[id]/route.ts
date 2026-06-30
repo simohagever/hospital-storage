@@ -99,12 +99,15 @@ export async function PUT(
     placementsByItemId.set(placement.configItemId, list);
   }
 
-  // Delete existing items (cascades to PlacedItemInstance via onDelete: Cascade),
-  // then create the new item set and update the cached configuration fields.
-  await prisma.$transaction([
-    prisma.wallConfigurationItem.deleteMany({ where: { configurationId: id } }),
-    ...input.items.map((item, index) =>
-      prisma.wallConfigurationItem.create({
+  // Interactive transaction — sequential operations share a connection and roll
+  // back atomically. Using the callback form (vs array form) means a failure on
+  // any individual item create surfaces the specific error rather than a generic
+  // "transaction failed" message, making debugging much easier.
+  await prisma.$transaction(async (tx) => {
+    await tx.wallConfigurationItem.deleteMany({ where: { configurationId: id } });
+
+    for (const [index, item] of input.items.entries()) {
+      await tx.wallConfigurationItem.create({
         data: {
           id: itemIds[index],
           configurationId: id,
@@ -127,9 +130,10 @@ export async function PUT(
             })),
           },
         },
-      }),
-    ),
-    prisma.wallConfiguration.update({
+      });
+    }
+
+    await tx.wallConfiguration.update({
       where: { id },
       data: {
         name: input.name,
@@ -141,8 +145,8 @@ export async function PUT(
         warnings: result.warnings as unknown as Prisma.InputJsonValue,
         layoutComputedAt: new Date(),
       },
-    }),
-  ]);
+    });
+  });
 
   return NextResponse.json({ id, fits: result.fits });
 }
