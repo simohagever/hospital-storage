@@ -1,0 +1,5 @@
+public/
+*.svg
+README.md
+AGENTS.md
+CLAUDE.md
