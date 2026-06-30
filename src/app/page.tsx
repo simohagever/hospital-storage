@@ -22,12 +22,20 @@ export default async function HomePage() {
           <h1 className="text-2xl font-bold">Wall configurations</h1>
           <p className="mt-1 text-sm text-zinc-500">Hospital storage furniture configurator</p>
         </div>
-        <Link
-          href="/configurations/new"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700"
-        >
-          New configuration
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/products"
+            className="rounded border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+          >
+            Product catalog
+          </Link>
+          <Link
+            href="/configurations/new"
+            className="rounded bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700"
+          >
+            New configuration
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8">

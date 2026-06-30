@@ -134,3 +134,48 @@ export const CreateConfigurationInputSchema = z
 
 export type ConfigItemInput = z.infer<typeof ConfigItemInputSchema>;
 export type CreateConfigurationInput = z.infer<typeof CreateConfigurationInputSchema>;
+
+// ─── Product admin input schemas ───────────────────────────────────────────
+
+const BaseProductSchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens"),
+  category: z.string().min(1).max(100),
+  description: z.string().max(1000).optional(),
+  defaultColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex colour like #6b8fa8")
+    .optional()
+    .nullable(),
+  isActive: z.boolean().default(true),
+  depth: z.number().positive().max(10), // metres
+});
+
+export const FixedProductInputSchema = BaseProductSchema.extend({
+  dimensionType: z.literal("FIXED"),
+  width: z.number().positive().max(30),  // metres
+  height: z.number().positive().max(30), // metres
+});
+
+export const ParametricProductInputSchema = BaseProductSchema.extend({
+  dimensionType: z.literal("PARAMETRIC"),
+  // width/height are omitted — they are computed at read time from parametricConfig
+  // via resolveDimensions() and are never stored on the product row itself.
+  parametricConfig: ParametricConfigSchema,
+});
+
+// Discriminated union — the API route picks the right branch based on dimensionType.
+// Slug uniqueness is enforced by the database (Product.slug @unique) and the route
+// catches Prisma P2002 to return a clean 400 instead of a generic 500.
+export const ProductInputSchema = z.discriminatedUnion("dimensionType", [
+  FixedProductInputSchema,
+  ParametricProductInputSchema,
+]);
+
+export type FixedProductInput = z.infer<typeof FixedProductInputSchema>;
+export type ParametricProductInput = z.infer<typeof ParametricProductInputSchema>;
+export type ProductInput = z.infer<typeof ProductInputSchema>;
