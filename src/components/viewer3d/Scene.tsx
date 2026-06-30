@@ -40,6 +40,13 @@ export function Scene({ placements, wallWidth, wallHeight, usedWidth }: ScenePro
   const cameraZ = maxDim * 1.5;
   const centerOffsetX = (wallWidth - usedWidth) / 2;
 
+  // frameloop="demand" only redraws when invalidate() is called.
+  // When showDimensions changes, React updates the scene graph but the canvas
+  // stays frozen until we explicitly request a new frame.
+  useEffect(() => {
+    invalidateRef.current?.();
+  }, [showDimensions]);
+
   const handleMount = useCallback(
     (gl: WebGLRenderer, inv: () => void) => {
       glRef.current = gl;
