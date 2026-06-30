@@ -18,12 +18,6 @@ export function ProductMesh({ placement: p, centerOffsetX, showDimensions }: Pro
   const cx = centerOffsetX + positionX + actualWidth / 2;
   const cy = positionY + actualHeight / 2;
 
-  // Font size scales with item height; clamped to always be readable.
-  const fontSize = Math.max(0.05, Math.min(0.15, actualHeight * 0.1));
-
-  // Label just in front of the box's front face — avoids z-fighting with the surface.
-  // A single combined label (W × H × D) is used instead of separate width/height
-  // labels to avoid collisions between stacked or adjacent items.
   const labelZ = actualDepth + 0.02;
   const dimensionText = `${actualWidth.toFixed(2)} × ${actualHeight.toFixed(2)} × ${actualDepth.toFixed(2)}m`;
 
@@ -38,7 +32,6 @@ export function ProductMesh({ placement: p, centerOffsetX, showDimensions }: Pro
         <DimensionLabel3d
           position={[cx, cy, labelZ]}
           text={dimensionText}
-          fontSize={fontSize}
         />
       )}
     </group>
