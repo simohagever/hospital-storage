@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ElevationSvg } from "@/components/elevation/ElevationSvg";
+import { SceneLoader } from "@/components/viewer3d/SceneLoader";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 import { prisma } from "@/lib/prisma";
 import { LayoutWarningSchema } from "@/lib/validation/schemas";
@@ -75,6 +76,15 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
           ))}
         </ul>
       )}
+
+      <h2 className="mt-8 text-lg font-semibold">3D view</h2>
+      <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
+        <SceneLoader
+          placements={placements}
+          wallWidth={configuration.wallWidth}
+          wallHeight={configuration.wallHeight}
+        />
+      </div>
 
       <h2 className="mt-8 text-lg font-semibold">Bill of materials</h2>
       <ul className="mt-2 divide-y divide-zinc-200">
