@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { COLUMN_WIDTH, DRAWER_HEIGHT } from "@/lib/layout-engine/dimensions";
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
@@ -50,7 +51,7 @@ export default async function ProductsPage() {
                     <p className="mt-0.5 text-sm text-zinc-500">
                       {p.dimensionType === "FIXED"
                         ? `${p.width?.toFixed(3)}m × ${p.height?.toFixed(3)}m × ${p.depth.toFixed(3)}m`
-                        : `Parametric · depth ${p.depth.toFixed(3)}m`}
+                        : `Parametric · col width ${COLUMN_WIDTH.toFixed(3)}m · drawer height ${DRAWER_HEIGHT.toFixed(3)}m · depth ${p.depth.toFixed(3)}m`}
                     </p>
                   </div>
                   <Link
