@@ -23,6 +23,7 @@ const products: Prisma.ProductCreateInput[] = [
     category: "locker",
     dimensionType: "PARAMETRIC",
     depth: 0.455,
+    defaultColor: "#6b8fa8",
     parametricConfig: {
       columns: {
         paramName: "columns",

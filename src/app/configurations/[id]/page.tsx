@@ -83,6 +83,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
           placements={placements}
           wallWidth={configuration.wallWidth}
           wallHeight={configuration.wallHeight}
+          usedWidth={configuration.usedWidth ?? 0}
         />
       </div>
 

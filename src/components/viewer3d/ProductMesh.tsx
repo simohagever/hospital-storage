@@ -9,12 +9,15 @@ const VISUAL_GAP = 0.001;
 
 interface ProductMeshProps {
   placement: PlacedInstance;
+  centerOffsetX: number;
 }
 
 // Maps a PlacedInstance's domain coordinates to a Three.js box.
 // Domain (x, y) = bottom-left corner in metres; z = 0 at the wall surface.
 // Three.js BoxGeometry is centred on its position, so we offset by half-extents.
-export function ProductMesh({ placement: p }: ProductMeshProps) {
+// centerOffsetX shifts items right so the layout is centred on the wall,
+// matching the same offset applied in the 2D elevation drawing.
+export function ProductMesh({ placement: p, centerOffsetX }: ProductMeshProps) {
   const { positionX, positionY, actualWidth, actualHeight, actualDepth, defaultColor } = p;
   const w = actualWidth - VISUAL_GAP;
   const h = actualHeight - VISUAL_GAP;
@@ -22,7 +25,7 @@ export function ProductMesh({ placement: p }: ProductMeshProps) {
   return (
     <mesh
       position={[
-        positionX + actualWidth / 2,
+        centerOffsetX + positionX + actualWidth / 2,
         positionY + actualHeight / 2,
         actualDepth / 2,
       ]}

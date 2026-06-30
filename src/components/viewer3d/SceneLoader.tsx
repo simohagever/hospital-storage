@@ -18,6 +18,7 @@ interface SceneLoaderProps {
   placements: PlacedInstance[];
   wallWidth: number;
   wallHeight: number;
+  usedWidth: number;
 }
 
 export function SceneLoader(props: SceneLoaderProps) {
