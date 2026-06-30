@@ -15,7 +15,10 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
     where: { id },
     include: {
       items: {
-        include: { product: true, placedItemInstances: true },
+        include: {
+            product: { include: { images: { where: { isPrimary: true }, take: 1 } } },
+            placedItemInstances: true,
+          },
         orderBy: { sortOrder: "asc" },
       },
     },
@@ -51,6 +54,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
       actualHeight: instance.actualHeight,
       actualDepth: instance.actualDepth,
       defaultColor: item.product.defaultColor ?? undefined,
+      imageUrl: item.product.images[0]?.url ?? undefined,
       grid,
     }));
   });

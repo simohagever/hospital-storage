@@ -91,8 +91,15 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
 
               return (
                 <g key={p.instanceKey}>
-                  {/* Base fill */}
+                  {/* Base fill — replaced by product photo when available */}
                   <rect x={x} y={y} width={w} height={h} fill={fill} stroke="none" />
+                  {p.imageUrl && (
+                    <image
+                      href={p.imageUrl}
+                      x={x} y={y} width={w} height={h}
+                      preserveAspectRatio="xMidYMid slice"
+                    />
+                  )}
 
                   {grid ? (
                     <>

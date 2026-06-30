@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/generated/prisma/client";
+import { ProductImageUploader } from "@/components/admin/ProductImageUploader";
 import { ParametricConfigSchema, type ParametricConfig } from "@/lib/validation/schemas";
 
 interface ProductFormProps {
   product?: Product; // undefined = create mode, defined = edit mode
+  primaryImage?: { id: string; url: string } | null;
 }
 
 const DEFAULT_PARAMETRIC_CONFIG: ParametricConfig = {
@@ -40,7 +42,7 @@ function slugify(name: string): string {
     .replace(/-+/g, "-");
 }
 
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({ product, primaryImage }: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!product;
 
@@ -88,7 +90,7 @@ export function ProductForm({ product }: ProductFormProps) {
     }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     setSubmitError(null);
 
@@ -280,6 +282,18 @@ export function ProductForm({ product }: ProductFormProps) {
       </div>
 
       {/* Dimension type */}
+      {isEdit && product && (
+        <div className="rounded-lg border border-zinc-200 p-4">
+          <ProductImageUploader
+            productId={product.id}
+            imageId={primaryImage?.id ?? null}
+            currentImageUrl={primaryImage?.url ?? null}
+            onUploaded={() => {}}
+            onDeleted={() => {}}
+          />
+        </div>
+      )}
+
       <div className="space-y-4 rounded-lg border border-zinc-200 p-4">
         <h2 className="font-semibold">Dimensions</h2>
 
