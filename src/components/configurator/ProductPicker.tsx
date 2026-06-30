@@ -106,7 +106,7 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
                 step="0.01"
                 min={parametricConfig.topOption.minHeight}
                 max={parametricConfig.topOption.maxHeight}
-                value={params[parametricConfig.topOption.heightParamName]}
+                value={Number.isFinite(params[parametricConfig.topOption.heightParamName]) ? params[parametricConfig.topOption.heightParamName] : ""}
                 onChange={(e) =>
                   setParams((p) => ({ ...p, [parametricConfig.topOption.heightParamName]: e.target.valueAsNumber }))
                 }
@@ -164,7 +164,7 @@ function CountField({
         type="number"
         min={setting.min}
         max={setting.max}
-        value={value}
+        value={Number.isFinite(value) ? value : ""}
         onChange={(e) => onChange(e.target.valueAsNumber)}
         className="mt-1 w-full rounded border border-zinc-300 px-2 py-1"
       />
