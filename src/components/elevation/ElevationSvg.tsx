@@ -5,7 +5,7 @@ import type { GridSection, PlacedInstance } from "@/lib/layout-engine/types";
 import { DRAWER_GAP, DRAWER_HEIGHT } from "@/lib/layout-engine/dimensions";
 import { DimensionLine } from "./DimensionLine";
 
-const MARGIN_LEFT = 60;
+const MARGIN_LEFT = 110; // extra space on the left for strip-dimension breakdown panel
 const MARGIN_TOP = 28;
 const MARGIN_RIGHT = 20;
 const MARGIN_BOTTOM = 100;
@@ -220,6 +220,54 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
               <>
                 {placements.map((p) => renderProfessionalItem(p))}
 
+                {/* ── LEFT-SIDE: 0.03 strip heights + total product height ── */}
+                {(() => {
+                  const first = placements.find((p) => p.grid);
+                  if (!first?.grid) return null;
+                  const { grid } = first;
+                  const fs = Math.max(7, Math.min(9, Math.round(pxPerMeter * 0.011)));
+                  const TICK = 6;
+                  const itemX = centerOffsetPx + first.positionX * pxPerMeter;
+                  const bracketX = itemX - 50;
+                  const totalX  = itemX - 82;
+                  return (
+                    <g>
+                      {grid.rows.map((s, i) => {
+                        const sy = toSvgY(first.positionY + s.offset, s.size);
+                        const sh = s.size * pxPerMeter;
+                        const label = s.kind === "drawers" ? (s.drawerHeight ?? s.size) : s.size;
+                        return (
+                          <g key={`lsa${i}`}>
+                            <line x1={bracketX} y1={sy} x2={bracketX} y2={sy + sh} stroke="#333" strokeWidth={0.8}/>
+                            <line x1={bracketX-TICK} y1={sy}    x2={bracketX+TICK} y2={sy}    stroke="#333" strokeWidth={0.8}/>
+                            <line x1={bracketX-TICK} y1={sy+sh} x2={bracketX+TICK} y2={sy+sh} stroke="#333" strokeWidth={0.8}/>
+                            {sh >= fs * 1.5 && (
+                              <text x={bracketX-TICK-2} y={sy+sh/2+fs*0.35} textAnchor="end" fontSize={fs} fill="#111">
+                                {label.toFixed(3)}m
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                      {(() => {
+                        const topY = toSvgY(first.positionY + first.actualHeight, first.actualHeight);
+                        const botY = topY + first.actualHeight * pxPerMeter;
+                        return (
+                          <g>
+                            <line x1={totalX} y1={topY} x2={totalX} y2={botY} stroke="#111" strokeWidth={1.2}/>
+                            <line x1={totalX-TICK} y1={topY} x2={totalX+TICK} y2={topY} stroke="#111" strokeWidth={1.2}/>
+                            <line x1={totalX-TICK} y1={botY} x2={totalX+TICK} y2={botY} stroke="#111" strokeWidth={1.2}/>
+                            <text x={totalX-TICK-2} y={(topY+botY)/2+(fs+1)*0.35}
+                              textAnchor="end" fontSize={fs+1} fill="#111" fontWeight="bold">
+                              {first.actualHeight.toFixed(3)}m
+                            </text>
+                          </g>
+                        );
+                      })()}
+                    </g>
+                  );
+                })()}
+
                 {/* Dimension lines — always shown in professional mode */}
                 <DimensionLine x1={centerOffsetPx} y1={wallHeightPx + 25} x2={centerOffsetPx + usedWidth * pxPerMeter} y2={wallHeightPx + 25}
                   label={`${usedWidth.toFixed(3)}m`} dashed color="#333" fontSize={dimLineFontSize} />
@@ -234,7 +282,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                   <line x1={0} y1={16} x2={160} y2={16} stroke="#333" strokeWidth={0.5} />
                   <line x1={0} y1={32} x2={160} y2={32} stroke="#333" strokeWidth={0.5} />
                   <text x={4} y={11} fontSize={7} fill="#111" fontWeight="bold">ELEVATION VIEW</text>
-                  <text x={4} y={27} fontSize={7} fill="#555">Scale 1:{Math.round(1 / (pxPerMeter / 1000))}</text>
+                  <text x={4} y={27} fontSize={7} fill="#555">Scale 1:{[1,2,5,10,20,25,50,100,200].reduce((b,s)=>Math.abs(s-Math.round(1/(pxPerMeter/1000)))<Math.abs(b-Math.round(1/(pxPerMeter/1000)))?s:b)}</text>
                   <text x={4} y={43} fontSize={7} fill="#555">Hospital Storage Configurator</text>
                 </g>
               </>
