@@ -67,7 +67,8 @@ export function resolveDimensions(
   const width = columns * COLUMN_WIDTH + (columns + 1) * COLUMN_DIVIDER;
 
   const drawersPerColumn = readCount(params, drawersSetting);
-  const oneRowHeight = drawersPerColumn * DRAWER_HEIGHT + (drawersPerColumn - 1) * DRAWER_GAP;
+  // Each drawer slot = DRAWER_HEIGHT + DRAWER_GAP, including the last drawer.
+  const oneRowHeight = drawersPerColumn * (DRAWER_HEIGHT + DRAWER_GAP);
 
   const rows = readCount(params, rowsSetting);
   const rowsHeight = rows * oneRowHeight + (rows + 1) * ROW_DIVIDER;

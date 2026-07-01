@@ -63,10 +63,10 @@ describe("resolveDimensions / PARAMETRIC", () => {
   it("computes the default Cell Boxes size (3 columns, 5 drawers, 1 row, top on)", () => {
     const result = resolveDimensions(parametricProduct, null);
     // width: 3 * 0.332 + 4 * 0.03 = 1.116
-    // oneRowHeight: 5 * 0.1 + 4 * 0.01 = 0.54; rowsHeight: 1 * 0.54 + 2 * 0.03 = 0.6
-    // height: rowsHeight + default topHeight (0.1) = 0.7
+    // oneRowHeight: 5 * (0.1 + 0.01) = 0.55; rowsHeight: 1 * 0.55 + 2 * 0.03 = 0.61
+    // height: rowsHeight + default topHeight (0.1) = 0.71
     expect(result.width).toBeCloseTo(1.116, 10);
-    expect(result.height).toBeCloseTo(0.7, 10);
+    expect(result.height).toBeCloseTo(0.71, 10);
     expect(result.depth).toBe(0.455);
   });
 
@@ -81,14 +81,14 @@ describe("resolveDimensions / PARAMETRIC", () => {
   });
 
   it("stacks rows with one shared divider between them, not two full sets", () => {
-    // rows=2, top off: rowsHeight = 2 * 0.54 + 3 * 0.03 = 1.17 (3 dividers, not 4)
+    // rows=2, top off: rowsHeight = 2 * 0.55 + 3 * 0.03 = 1.19 (3 dividers, not 4)
     const result = resolveDimensions(parametricProduct, { rows: 2, hasTop: 0 });
-    expect(result.height).toBeCloseTo(1.17, 10);
+    expect(result.height).toBeCloseTo(1.19, 10);
   });
 
   it("excludes the top shelf height when hasTop=0", () => {
     const result = resolveDimensions(parametricProduct, { hasTop: 0 });
-    expect(result.height).toBeCloseTo(0.6, 10);
+    expect(result.height).toBeCloseTo(0.61, 10);
   });
 
   it("throws on a non-finite columns value instead of silently miscomputing", () => {

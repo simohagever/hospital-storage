@@ -65,11 +65,11 @@ describe("computeInternalGrid — rows", () => {
     expect(rows.filter((r) => r.kind === "row-divider")).toHaveLength(3);
   });
 
-  it("drawer block height = n*DRAWER_HEIGHT + (n-1)*DRAWER_GAP", () => {
+  it("drawer block height = n*(DRAWER_HEIGHT+DRAWER_GAP) — trailing gap after last drawer", () => {
     const n = 5;
     const { rows } = computeInternalGrid(config, { drawersPerColumn: n, hasTop: 0 });
     const block = rows.find((r) => r.kind === "drawers")!;
-    expect(block.size).toBeCloseTo(n * DRAWER_HEIGHT + (n - 1) * DRAWER_GAP, 10);
+    expect(block.size).toBeCloseTo(n * (DRAWER_HEIGHT + DRAWER_GAP), 10);
   });
 
   it("drawer block carries drawerHeight = DRAWER_HEIGHT for annotation", () => {

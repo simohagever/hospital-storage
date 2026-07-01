@@ -39,7 +39,8 @@ export function computeInternalGrid(
   // Pattern: row-divider, drawers, row-divider, drawers, ..., row-divider, [top-shelf]
   // One divider per boundary (n rows → n+1 dividers), matching dimensions.ts's formula:
   //   rowsHeight = rows * oneRowHeight + (rows + 1) * ROW_DIVIDER
-  const drawerBlockHeight = drawersPerCol * DRAWER_HEIGHT + (drawersPerCol - 1) * DRAWER_GAP;
+  // Each drawer slot includes the trailing 0.01m gap (same formula as dimensions.ts).
+  const drawerBlockHeight = drawersPerCol * (DRAWER_HEIGHT + DRAWER_GAP);
   const rows: GridSection[] = [];
   let y = 0;
   for (let r = 0; r < nRows; r++) {
