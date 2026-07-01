@@ -81,7 +81,7 @@ function DetailedBox({
             const panelW = col.size - 0.003;
             const panelH = DRAWER_HEIGHT - 0.002;
             const handleH = DRAWER_HEIGHT * 0.18;
-            const key = `drawer-${col.offset.toFixed(3)}-${di}`;
+            const key = `drawer-${col.offset.toFixed(3)}-${row.offset.toFixed(3)}-${di}`;
 
             drawerPanels.push(
               <group key={key} position={[localX, localY, d / 2 + 0.003]}>
