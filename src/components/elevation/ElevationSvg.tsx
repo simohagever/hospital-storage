@@ -132,12 +132,18 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
       <ProfProfile key={`rp${i}`} id={`rp${i}`} x={x} y={toSvgY(p.positionY + s.offset, s.size)} w={w} h={sectionPxHeight(s)} />,
     );
 
-    // Top shelf
-    const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => (
-      <g key={`ts${i}`}>
-        <rect x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill="#f0ede8" stroke="#333" strokeWidth={PROF_STROKE_PROFILE} />
-      </g>
-    ));
+    // Top section = open shelf bay in professional mode: white interior, shelf board at bottom
+    const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
+      const sy = toSvgY(p.positionY + s.offset, s.size);
+      const sh = sectionPxHeight(s);
+      const boardPx = Math.max(2, pxPerMeter * 0.018);
+      return (
+        <g key={`ts${i}`}>
+          <rect x={x} y={sy} width={w} height={sh} fill="white" stroke="none" />
+          <rect x={x} y={sy + sh - boardPx} width={w} height={boardPx} fill="#d8d5d0" stroke="#333" strokeWidth={0.5} />
+        </g>
+      );
+    });
 
     return (
       <g key={p.instanceKey}>
@@ -333,9 +339,17 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                           {grid.rows.filter((s) => s.kind === "row-divider").map((s, i) => (
                             <rect key={"rd" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={DIVIDER_COLOR} />
                           ))}
-                          {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => (
-                            <rect key={"ts" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={TOP_SHELF_COLOR} />
-                          ))}
+                          {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
+                            const sy = toSvgY(p.positionY + s.offset, s.size);
+                            const sh = sectionPxHeight(s);
+                            const boardPx = Math.max(2, pxPerMeter * 0.018);
+                            return (
+                              <g key={"ts" + i}>
+                                <rect x={x} y={sy} width={w} height={sh} fill="#f5f2ee" stroke="none" />
+                                <rect x={x} y={sy + sh - boardPx} width={w} height={boardPx} fill={DIVIDER_COLOR} />
+                              </g>
+                            );
+                          })}
 
                           <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
 

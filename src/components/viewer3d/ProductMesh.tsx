@@ -107,15 +107,19 @@ function DetailedBox({
         });
     });
 
-  // Top-shelf panel — slightly lighter to distinguish from drawers
+  // Top section = open shelf bays (like the real product photo).
+  // No solid front panel — the gray frame provides the edges.
+  // A thin horizontal shelf board at the top of the bay suggests the shelf surface.
   grid.rows
     .filter((s) => s.kind === "top-shelf")
     .forEach((s, i) => {
-      const localY = toLocalY(s.offset + s.size / 2);
+      const shelfBoardH = 0.018; // shelf board thickness (metres)
+      // Bottom shelf board (the "floor" of the open bay)
+      const bottomY = toLocalY(s.offset + shelfBoardH / 2);
       drawerPanels.push(
-        <mesh key={`top-${i}`} position={[0, localY, d / 2 + 0.002]}>
-          <boxGeometry args={[w - 0.008, s.size - 0.002, 0.005]} />
-          <meshStandardMaterial color={drawerColor} emissive="white" emissiveIntensity={0.06} />
+        <mesh key={`top-bot-${i}`} position={[0, bottomY, 0]}>
+          <boxGeometry args={[w - 0.002, shelfBoardH, d - 0.002]} />
+          <meshStandardMaterial color="#f0ece6" />
         </mesh>,
       );
     });
