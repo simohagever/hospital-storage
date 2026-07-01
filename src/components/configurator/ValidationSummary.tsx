@@ -34,7 +34,7 @@ export function ValidationSummary({ result, error, itemCount, wallWidth, wallHei
 
   if (itemCount === 0 || !result) {
     return (
-      <div className="rounded border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-500">
+      <div className="rounded border border-stone-200 bg-stone-50 p-3 text-sm text-stone-500">
         Add products to see whether they fit.
       </div>
     );

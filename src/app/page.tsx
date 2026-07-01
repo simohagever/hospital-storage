@@ -26,13 +26,13 @@ export default async function HomePage() {
         <div className="flex gap-2">
           <Link
             href="/products"
-            className="rounded border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+            className="rounded border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-[#faf9f7]"
           >
             Product catalog
           </Link>
           <Link
             href="/configurations/new"
-            className="rounded bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700"
+            className="rounded bg-[#292524] px-4 py-2 text-sm text-white hover:bg-[#44403c]"
           >
             New configuration
           </Link>
@@ -45,13 +45,13 @@ export default async function HomePage() {
             <p className="text-zinc-500">No configurations yet.</p>
             <Link
               href="/configurations/new"
-              className="mt-4 inline-block rounded bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700"
+              className="mt-4 inline-block rounded bg-[#292524] px-4 py-2 text-sm text-white hover:bg-[#44403c]"
             >
               Create your first configuration
             </Link>
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+          <ul className="divide-y divide-[#e7e5e4] rounded-xl border border-[#e7e5e4] bg-white shadow-sm">
             {configurations.map((config) => (
               <li key={config.id} className="flex items-center justify-between gap-4 p-4">
                 <Link href={`/configurations/${config.id}`} className="flex-1 hover:underline">

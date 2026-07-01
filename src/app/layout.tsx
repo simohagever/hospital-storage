@@ -28,20 +28,23 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
-        <nav className="border-b border-zinc-200 bg-white">
+      <body className="flex min-h-full flex-col bg-[#faf9f7] text-[#1c1917]">
+        <nav className="sticky top-0 z-50 border-b border-[#e7e5e4] bg-white/90 shadow-sm backdrop-blur-sm">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-            <Link href="/" className="text-sm font-semibold text-zinc-900 hover:text-zinc-600">
-              Hospital Storage
+            <Link href="/" className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#292524] text-xs font-bold text-white">
+                HS
+              </span>
+              <span className="text-sm font-semibold text-[#1c1917]">Hospital Storage</span>
             </Link>
-            <div className="flex items-center gap-6 text-sm">
-              <Link href="/" className="text-zinc-600 hover:text-zinc-900">
+            <div className="flex items-center gap-1 text-sm">
+              <Link href="/" className="rounded-md px-3 py-1.5 text-[#78716c] transition-colors hover:bg-[#f5f4f2] hover:text-[#1c1917]">
                 Configurations
               </Link>
-              <Link href="/configurations/new" className="text-zinc-600 hover:text-zinc-900">
+              <Link href="/configurations/new" className="rounded-md px-3 py-1.5 text-[#78716c] transition-colors hover:bg-[#f5f4f2] hover:text-[#1c1917]">
                 New
               </Link>
-              <Link href="/products" className="text-zinc-600 hover:text-zinc-900">
+              <Link href="/products" className="rounded-md px-3 py-1.5 text-[#78716c] transition-colors hover:bg-[#f5f4f2] hover:text-[#1c1917]">
                 Products
               </Link>
             </div>

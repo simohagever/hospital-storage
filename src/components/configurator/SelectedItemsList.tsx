@@ -60,11 +60,11 @@ function formatDimensions(product: Product | undefined, params: Record<string, n
 
 export function SelectedItemsList({ items, productsById, onRemove }: SelectedItemsListProps) {
   if (items.length === 0) {
-    return <p className="text-sm text-zinc-500">No products added yet.</p>;
+    return <p className="text-sm text-stone-500">No products added yet.</p>;
   }
 
   return (
-    <ul className="divide-y divide-zinc-200">
+    <ul className="divide-y divide-stone-200">
       {items.map((item) => {
         const product = productsById.get(item.productId);
         const paramsSummary = formatParams(product, item.params);
@@ -74,11 +74,11 @@ export function SelectedItemsList({ items, productsById, onRemove }: SelectedIte
           <li key={item.tempId} className="flex items-center justify-between gap-3 py-2">
             <div>
               <p className="font-medium">{product?.name ?? "Unknown product"}</p>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-stone-500">
                 Qty {item.quantity}
                 {dimensionsSummary ? ` · ${dimensionsSummary}` : ""}
               </p>
-              {paramsSummary && <p className="text-sm text-zinc-400">{paramsSummary}</p>}
+              {paramsSummary && <p className="text-sm text-stone-400">{paramsSummary}</p>}
             </div>
             <button
               type="button"

@@ -20,15 +20,15 @@ export default async function EditProductPage({
   return (
     <div className="mx-auto max-w-2xl p-6">
       <h1 className="text-2xl font-bold">Edit product</h1>
-      <p className="mt-1 text-sm text-zinc-500">{product.name}</p>
+      <p className="mt-1 text-sm text-stone-500">{product.name}</p>
       <div className="mt-6">
         <ProductForm
           product={product}
           primaryImage={primaryImage ? { id: primaryImage.id, url: primaryImage.url } : null}
         />
       </div>
-      <div className="mt-8 border-t border-zinc-200 pt-6">
-        <Link href="/products" className="text-sm text-zinc-500 hover:underline">
+      <div className="mt-8 border-t border-stone-200 pt-6">
+        <Link href="/products" className="text-sm text-stone-500 hover:underline">
           ← Back to catalog
         </Link>
       </div>

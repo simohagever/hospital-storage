@@ -112,7 +112,7 @@ export function ConfiguratorClient({ products, configurationId, initialData }: C
       </div>
 
       <div className="space-y-6">
-        <div className="rounded-lg border border-zinc-200 p-4">
+        <div className="rounded-lg border border-stone-200 p-4">
           <h2 className="text-lg font-semibold">Selected items</h2>
           <div className="mt-3">
             <SelectedItemsList items={items} productsById={productsById} onRemove={handleRemove} />
@@ -125,7 +125,7 @@ export function ConfiguratorClient({ products, configurationId, initialData }: C
           type="button"
           disabled={!canSubmit || submitState.status === "submitting"}
           onClick={handleSubmit}
-          className="w-full rounded bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
+          className="w-full rounded bg-[#292524] px-4 py-2 text-white disabled:opacity-50"
         >
           {submitState.status === "submitting"
             ? isEdit ? "Saving…" : "Creating…"

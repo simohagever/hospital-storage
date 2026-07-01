@@ -182,22 +182,22 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic info */}
-      <div className="space-y-4 rounded-lg border border-zinc-200 p-4">
+      <div className="space-y-4 rounded-lg border border-stone-200 p-4">
         <h2 className="font-semibold">Basic info</h2>
 
         <label className="block">
-          <span className="block text-sm font-medium text-zinc-700">Name</span>
+          <span className="block text-sm font-medium text-stone-700">Name</span>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+            className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
           />
         </label>
 
         <label className="block">
-          <span className="block text-sm font-medium text-zinc-700">Slug</span>
+          <span className="block text-sm font-medium text-stone-700">Slug</span>
           <input
             type="text"
             required
@@ -207,9 +207,9 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
               setSlug(e.target.value);
               setSlugTouched(true);
             }}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 font-mono text-sm"
+            className="mt-1 w-full rounded border border-stone-300 px-3 py-2 font-mono text-sm"
           />
-          <span className="mt-1 block text-xs text-zinc-400">
+          <span className="mt-1 block text-xs text-stone-400">
             Lowercase letters, numbers, hyphens. Auto-derived from name.
           </span>
           {slug === "" && name !== "" && (
@@ -221,18 +221,18 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <label className="block">
-            <span className="block text-sm font-medium text-zinc-700">Category</span>
+            <span className="block text-sm font-medium text-stone-700">Category</span>
             <input
               type="text"
               required
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
               placeholder="e.g. locker"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-zinc-700">Depth (m)</span>
+            <span className="block text-sm font-medium text-stone-700">Depth (m)</span>
             <input
               type="number"
               required
@@ -240,37 +240,37 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
               min="0.001"
               value={depth}
               onChange={(e) => setDepth(e.target.value)}
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+              className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
             />
           </label>
         </div>
 
         <label className="block">
-          <span className="block text-sm font-medium text-zinc-700">Description</span>
+          <span className="block text-sm font-medium text-stone-700">Description</span>
           <textarea
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded border border-stone-300 px-3 py-2 text-sm"
           />
         </label>
 
         <div className="flex flex-wrap items-center gap-4">
           <label className="block">
-            <span className="block text-sm font-medium text-zinc-700">Default colour</span>
+            <span className="block text-sm font-medium text-stone-700">Default colour</span>
             <div className="mt-1 flex items-center gap-2">
               <input
                 type="color"
                 value={defaultColor ?? "#6b8fa8"}
                 onChange={(e) => setDefaultColor(e.target.value)}
-                className="h-9 w-14 cursor-pointer rounded border border-zinc-300 p-1"
+                className="h-9 w-14 cursor-pointer rounded border border-stone-300 p-1"
               />
               <input
                 type="text"
                 value={defaultColor ?? ""}
                 onChange={(e) => setDefaultColor(e.target.value)}
                 placeholder="#6b8fa8"
-                className="w-28 rounded border border-zinc-300 px-3 py-2 font-mono text-sm"
+                className="w-28 rounded border border-stone-300 px-3 py-2 font-mono text-sm"
               />
             </div>
           </label>
@@ -288,7 +288,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
 
       {/* Dimension type */}
       {isEdit && product ? (
-        <div className="rounded-lg border border-zinc-200 p-4">
+        <div className="rounded-lg border border-stone-200 p-4">
           <ProductImageUploader
             productId={product.id}
             imageId={primaryImage?.id ?? null}
@@ -298,12 +298,12 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
           />
         </div>
       ) : (
-        <div className="rounded-lg border border-zinc-100 bg-zinc-50 p-4 text-sm text-zinc-500">
+        <div className="rounded-lg border border-zinc-100 bg-stone-50 p-4 text-sm text-stone-500">
           Save the product first, then come back to edit it to upload a photo.
         </div>
       )}
 
-      <div className="space-y-4 rounded-lg border border-zinc-200 p-4">
+      <div className="space-y-4 rounded-lg border border-stone-200 p-4">
         <h2 className="font-semibold">Dimensions</h2>
 
         <div className="flex gap-4">
@@ -324,7 +324,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
         {dimensionType === "FIXED" ? (
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="block text-sm font-medium text-zinc-700">Width (m)</span>
+              <span className="block text-sm font-medium text-stone-700">Width (m)</span>
               <input
                 type="number"
                 required
@@ -332,11 +332,11 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
                 min="0.001"
                 value={width}
                 onChange={(e) => setWidth(e.target.value)}
-                className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
               />
             </label>
             <label className="block">
-              <span className="block text-sm font-medium text-zinc-700">Height (m)</span>
+              <span className="block text-sm font-medium text-stone-700">Height (m)</span>
               <input
                 type="number"
                 required
@@ -344,7 +344,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
                 min="0.001"
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
-                className="mt-1 w-full rounded border border-zinc-300 px-3 py-2"
+                className="mt-1 w-full rounded border border-stone-300 px-3 py-2"
               />
             </label>
           </div>
@@ -352,20 +352,20 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
           <div className="space-y-4">
             {(["columns", "drawersPerColumn", "rows"] as const).map((field) => (
               <div key={field} className="rounded border border-zinc-100 p-3">
-                <p className="mb-2 text-sm font-medium text-zinc-700">
+                <p className="mb-2 text-sm font-medium text-stone-700">
                   {parametricConfig[field].label}
                 </p>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                   {(["paramName", "label", "min", "max", "defaultValue"] as const).map((key) => (
                     <label key={key} className="block text-xs">
-                      <span className="block text-zinc-500">{key}</span>
+                      <span className="block text-stone-500">{key}</span>
                       <input
                         type={["min", "max", "defaultValue"].includes(key) ? "number" : "text"}
                         value={String(
                           (parametricConfig[field] as Record<string, unknown>)[key] ?? "",
                         )}
                         onChange={(e) => updateCountSetting(field, key, e.target.value)}
-                        className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1"
+                        className="mt-0.5 w-full rounded border border-stone-300 px-2 py-1"
                       />
                     </label>
                   ))}
@@ -374,23 +374,23 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
             ))}
 
             <div className="rounded border border-zinc-100 p-3">
-              <p className="mb-2 text-sm font-medium text-zinc-700">Top shelf option</p>
+              <p className="mb-2 text-sm font-medium text-stone-700">Top shelf option</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {(["paramName", "label", "heightParamName", "heightLabel"] as const).map((key) => (
                   <label key={key} className="block text-xs">
-                    <span className="block text-zinc-500">{key}</span>
+                    <span className="block text-stone-500">{key}</span>
                     <input
                       type="text"
                       value={String(
                         (parametricConfig.topOption as Record<string, unknown>)[key] ?? "",
                       )}
                       onChange={(e) => updateTopOption(key, e.target.value)}
-                      className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1"
+                      className="mt-0.5 w-full rounded border border-stone-300 px-2 py-1"
                     />
                   </label>
                 ))}
                 <label className="block text-xs">
-                  <span className="block text-zinc-500">defaultEnabled</span>
+                  <span className="block text-stone-500">defaultEnabled</span>
                   <input
                     type="checkbox"
                     checked={parametricConfig.topOption.defaultEnabled}
@@ -400,7 +400,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
                 </label>
                 {(["minHeight", "maxHeight", "defaultHeight"] as const).map((key) => (
                   <label key={key} className="block text-xs">
-                    <span className="block text-zinc-500">{key} (m)</span>
+                    <span className="block text-stone-500">{key} (m)</span>
                     <input
                       type="number"
                       step="0.01"
@@ -408,7 +408,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
                         (parametricConfig.topOption as Record<string, unknown>)[key] ?? "",
                       )}
                       onChange={(e) => updateTopOption(key, e.target.value)}
-                      className="mt-0.5 w-full rounded border border-zinc-300 px-2 py-1"
+                      className="mt-0.5 w-full rounded border border-stone-300 px-2 py-1"
                     />
                   </label>
                 ))}
@@ -428,7 +428,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
         <button
           type="submit"
           disabled={saving}
-          className="rounded bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded bg-[#292524] px-4 py-2 text-sm text-white disabled:opacity-50"
         >
           {saving ? "Saving…" : isEdit ? "Save changes" : "Create product"}
         </button>

@@ -65,7 +65,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
   return (
     <div className="mx-auto max-w-5xl p-6">
       <h1 className="text-2xl font-bold">{configuration.name}</h1>
-      <p className="mt-1 text-zinc-600">
+      <p className="mt-1 text-stone-500">
         {configuration.wallWidth.toFixed(2)}m × {configuration.wallHeight.toFixed(2)}m wall
       </p>
 
@@ -79,7 +79,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
         </div>
       )}
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 p-4">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-stone-200 p-4">
         <ElevationSvg
           placements={placements}
           wallWidth={configuration.wallWidth}
@@ -97,7 +97,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
       )}
 
       <h2 className="mt-8 text-lg font-semibold">3D view</h2>
-      <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
+      <div className="mt-3 overflow-hidden rounded-lg border border-stone-200">
         <SceneLoader
           placements={placements}
           wallWidth={configuration.wallWidth}
@@ -107,7 +107,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
       </div>
 
       <h2 className="mt-8 text-lg font-semibold">Bill of materials</h2>
-      <ul className="mt-2 divide-y divide-zinc-200">
+      <ul className="mt-2 divide-y divide-stone-200">
         {configuration.items.map((item) => (
           <li key={item.id} className="py-2 text-sm">
             {item.product.name} × {item.quantity} ({item.placedItemInstances.length} placed) — depth{" "}
@@ -116,7 +116,7 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
         ))}
       </ul>
 
-      <Link href="/configurations/new" className="mt-6 inline-block text-sm text-zinc-600 hover:underline">
+      <Link href="/configurations/new" className="mt-6 inline-block text-sm text-stone-500 hover:underline">
         Create another configuration
       </Link>
     </div>

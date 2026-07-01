@@ -13,7 +13,7 @@ interface ProductPickerProps {
 
 export function ProductPicker({ products, onAdd }: ProductPickerProps) {
   return (
-    <div className="space-y-4 rounded-lg border border-zinc-200 p-4">
+    <div className="space-y-4 rounded-lg border border-stone-200 p-4">
       <h2 className="text-lg font-semibold">Add products</h2>
       <div className="space-y-3">
         {products.map((product) => (
@@ -64,11 +64,11 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
   const hasTop = parametricConfig ? Boolean(params[parametricConfig.topOption.paramName]) : false;
 
   return (
-    <div className="rounded border border-zinc-200 p-3">
+    <div className="rounded border border-stone-200 p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-medium">{product.name}</p>
-          <p className="text-sm text-zinc-500">{product.category}</p>
+          <p className="text-sm text-stone-500">{product.category}</p>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
             onChange={(v) => setParams((p) => ({ ...p, [parametricConfig.rows.paramName]: v }))}
           />
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-700">
+            <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
               <input
                 type="checkbox"
                 checked={hasTop}
@@ -110,7 +110,7 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
                 onChange={(e) =>
                   setParams((p) => ({ ...p, [parametricConfig.topOption.heightParamName]: e.target.valueAsNumber }))
                 }
-                className="mt-1 w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+                className="mt-1 w-full rounded border border-stone-300 px-2 py-1 text-sm"
               />
             )}
           </div>
@@ -120,7 +120,7 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="text-sm">
           {preview && (
-            <span className="text-zinc-600">
+            <span className="text-stone-500">
               {preview.width.toFixed(3)}m × {preview.height.toFixed(3)}m × {preview.depth.toFixed(3)}m
             </span>
           )}
@@ -132,13 +132,13 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
             min={1}
             value={quantity}
             onChange={(e) => setQuantity(e.target.valueAsNumber)}
-            className="w-16 rounded border border-zinc-300 px-2 py-1 text-sm"
+            className="w-16 rounded border border-stone-300 px-2 py-1 text-sm"
           />
           <button
             type="button"
             disabled={!preview}
             onClick={() => onAdd(product.id, quantity, parametricConfig ? params : null)}
-            className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-[#292524] px-3 py-1.5 text-sm text-white disabled:opacity-50"
           >
             Add
           </button>
@@ -159,14 +159,14 @@ function CountField({
 }) {
   return (
     <label className="block text-sm">
-      <span className="block font-medium text-zinc-700">{setting.label}</span>
+      <span className="block font-medium text-stone-700">{setting.label}</span>
       <input
         type="number"
         min={setting.min}
         max={setting.max}
         value={Number.isFinite(value) ? value : ""}
         onChange={(e) => onChange(e.target.valueAsNumber)}
-        className="mt-1 w-full rounded border border-zinc-300 px-2 py-1"
+        className="mt-1 w-full rounded border border-stone-300 px-2 py-1"
       />
     </label>
   );
