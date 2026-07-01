@@ -6,7 +6,7 @@ import { DRAWER_GAP, DRAWER_HEIGHT } from "@/lib/layout-engine/dimensions";
 import { DimensionLine } from "./DimensionLine";
 
 const MARGIN_LEFT = 60;
-const MARGIN_TOP = 28; // extra headroom for column annotations above top-row items
+const MARGIN_TOP = 28;
 const MARGIN_RIGHT = 20;
 const MARGIN_BOTTOM = 100;
 const BASE_WALL_WIDTH_PX = 700;
@@ -18,10 +18,14 @@ const ZOOM_MAX = 4;
 const MIN_WIDTH_PX_FOR_LABELS = 40;
 const MIN_HEIGHT_PX_FOR_LABELS = 28;
 
-// Structural divider colour — slightly darker than the product fill so the
-// 0.03m column and row dividers read as a distinct material.
 const DIVIDER_COLOR = "#7a8f98";
 const TOP_SHELF_COLOR = "#5a7a93";
+
+// Professional drawing mode line weights
+const PROF_STROKE_MAIN = 1.5;   // outer wall border
+const PROF_STROKE_PROFILE = 1;  // structural profiles
+const PROF_STROKE_DRAWER = 0.7; // drawer outlines
+const PROF_PROFILE_WALL = 3;    // hollow-section inner offset (px) for double-line profiles
 
 interface ElevationSvgProps {
   placements: PlacedInstance[];
@@ -32,6 +36,7 @@ interface ElevationSvgProps {
 
 export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: ElevationSvgProps) {
   const [zoom, setZoom] = useState(1);
+  const [profMode, setProfMode] = useState(false);
 
   const basePxPerMeter = Math.max(BASE_WALL_WIDTH_PX / wallWidth, MIN_PX_PER_METER);
   const pxPerMeter = basePxPerMeter * zoom;
@@ -45,9 +50,8 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   const dimFontSize = Math.min(18, Math.max(8, Math.round(pxPerMeter * 0.026)));
   const dimLineFontSize = Math.min(16, Math.max(11, Math.round(pxPerMeter * 0.022)));
   const annotFontSize = Math.max(7, Math.min(10, Math.round(pxPerMeter * 0.013)));
-  // Only show structural dimension annotations when zoomed in enough — below 125%
-  // the labels overlap and clutter the drawing.
-  const showAnnotations = zoom >= 1.25;
+  // Annotations visible at ≥125% in colour mode; always visible in professional mode
+  const showAnnotations = profMode || zoom >= 1.25;
 
   function toSvgY(domainY: number, height: number): number {
     return (wallHeight - (domainY + height)) * pxPerMeter;
@@ -57,241 +61,284 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
     return s.size * pxPerMeter;
   }
 
+  // ── Professional-mode rendering helpers ──────────────────────────────────
+  // Draws a structural hollow-section profile rectangle (like the aluminium
+  // extrusions shown in the PDF drawings) — outer rect + inner lighter rect.
+  function ProfProfile({
+    x, y, w, h, id,
+  }: { x: number; y: number; w: number; h: number; id: string }) {
+    const inner = PROF_PROFILE_WALL;
+    return (
+      <g key={id}>
+        <rect x={x} y={y} width={w} height={h} fill="#d8d5d0" stroke="#111" strokeWidth={PROF_STROKE_PROFILE} />
+        {w > inner * 3 && h > inner * 3 && (
+          <rect x={x + inner} y={y + inner} width={w - inner * 2} height={h - inner * 2} fill="white" stroke="#555" strokeWidth={0.4} />
+        )}
+      </g>
+    );
+  }
+
+  function renderProfessionalItem(p: PlacedInstance) {
+    const x = centerOffsetPx + p.positionX * pxPerMeter;
+    const y = toSvgY(p.positionY, p.actualHeight);
+    const w = p.actualWidth * pxPerMeter;
+    const h = p.actualHeight * pxPerMeter;
+    const { grid } = p;
+
+    if (!grid) {
+      // FIXED product — simple outlined box
+      return (
+        <g key={p.instanceKey}>
+          <rect x={x} y={y} width={w} height={h} fill="white" stroke="#111" strokeWidth={PROF_STROKE_MAIN} />
+          <text x={x + w / 2} y={y + h / 2} textAnchor="middle" dominantBaseline="middle" fontSize={annotFontSize} fill="#333">{p.productName}</text>
+        </g>
+      );
+    }
+
+    const drawers: React.ReactElement[] = [];
+
+    // Draw individual drawer cells in each column bay
+    grid.columns.filter((col) => col.kind === "column").forEach((col) => {
+      grid.rows.filter((row) => row.kind === "drawers" && row.drawerCount != null).forEach((row) => {
+        for (let di = 0; di < row.drawerCount!; di++) {
+          const drawerDomainY = p.positionY + row.offset + di * (DRAWER_HEIGHT + DRAWER_GAP);
+          const drawerSvgY = toSvgY(drawerDomainY, DRAWER_HEIGHT);
+          const drawerH = DRAWER_HEIGHT * pxPerMeter;
+          const drawerX = x + col.offset * pxPerMeter;
+          const drawerW = col.size * pxPerMeter;
+          const handleH = Math.max(1.5, drawerH * 0.15);
+          drawers.push(
+            <g key={`pd-${col.offset.toFixed(3)}-${row.offset.toFixed(3)}-${di}`}>
+              <rect x={drawerX} y={drawerSvgY} width={drawerW} height={drawerH} fill="white" stroke="#333" strokeWidth={PROF_STROKE_DRAWER} />
+              {/* Handle line */}
+              <line
+                x1={drawerX + drawerW * 0.15} y1={drawerSvgY + drawerH - handleH}
+                x2={drawerX + drawerW * 0.85} y2={drawerSvgY + drawerH - handleH}
+                stroke="#555" strokeWidth={0.8}
+              />
+            </g>,
+          );
+        }
+      });
+    });
+
+    // Column divider profiles
+    const colProfiles = grid.columns.filter((s) => s.kind === "col-divider").map((s, i) =>
+      <ProfProfile key={`cp${i}`} id={`cp${i}`} x={x + s.offset * pxPerMeter} y={y} w={s.size * pxPerMeter} h={h} />,
+    );
+
+    // Row divider profiles
+    const rowProfiles = grid.rows.filter((s) => s.kind === "row-divider").map((s, i) =>
+      <ProfProfile key={`rp${i}`} id={`rp${i}`} x={x} y={toSvgY(p.positionY + s.offset, s.size)} w={w} h={sectionPxHeight(s)} />,
+    );
+
+    // Top shelf
+    const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => (
+      <g key={`ts${i}`}>
+        <rect x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill="#f0ede8" stroke="#333" strokeWidth={PROF_STROKE_PROFILE} />
+      </g>
+    ));
+
+    return (
+      <g key={p.instanceKey}>
+        {/* White base fill */}
+        <rect x={x} y={y} width={w} height={h} fill="white" stroke="none" />
+        {drawers}
+        {colProfiles}
+        {rowProfiles}
+        {topShelves}
+        {/* Outer border */}
+        <rect x={x} y={y} width={w} height={h} fill="none" stroke="#111" strokeWidth={PROF_STROKE_MAIN} />
+        {/* Column annotations */}
+        {grid.columns.map((s, i) => {
+          const secX = x + s.offset * pxPerMeter;
+          const secW = s.size * pxPerMeter;
+          if (secW < annotFontSize * 2.5) return null;
+          return (
+            <text key={`pca${i}`} x={secX + secW / 2} y={y - 3} textAnchor="middle" dominantBaseline="alphabetic" fontSize={annotFontSize} fill="#111">
+              {s.size.toFixed(2)}m
+            </text>
+          );
+        })}
+        {/* Row annotations */}
+        {grid.rows.map((s, i) => {
+          const secH = sectionPxHeight(s);
+          if (secH < annotFontSize * 1.2) return null;
+          const secY = toSvgY(p.positionY + s.offset, s.size);
+          const labelM = s.kind === "drawers" ? (s.drawerHeight ?? s.size) : s.size;
+          return (
+            <text key={`pra${i}`} x={x + w + 4} y={secY + secH / 2 + annotFontSize * 0.35} textAnchor="start" fontSize={annotFontSize} fill="#111">
+              {labelM.toFixed(2)}m
+            </text>
+          );
+        })}
+      </g>
+    );
+  }
+
+  // ── Controls ─────────────────────────────────────────────────────────────
   return (
     <div>
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-3">
+        {/* Zoom controls */}
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))} disabled={zoom <= ZOOM_MIN}
+            className="flex h-8 w-8 items-center justify-center rounded border border-stone-300 text-lg font-medium leading-none text-stone-700 hover:bg-stone-100 disabled:opacity-30">−</button>
+          <span className="w-12 text-center text-sm text-stone-600">{Math.round(zoom * 100)}%</span>
+          <button type="button" onClick={() => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))} disabled={zoom >= ZOOM_MAX}
+            className="flex h-8 w-8 items-center justify-center rounded border border-stone-300 text-lg font-medium leading-none text-stone-700 hover:bg-stone-100 disabled:opacity-30">+</button>
+        </div>
+
+        {/* Professional drawing toggle */}
         <button
           type="button"
-          onClick={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - ZOOM_STEP).toFixed(2)))}
-          disabled={zoom <= ZOOM_MIN}
-          className="flex h-8 w-8 items-center justify-center rounded border border-zinc-300 text-lg font-medium leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-30"
+          onClick={() => setProfMode((v) => !v)}
+          className={`rounded border px-3 py-1.5 text-sm transition-colors ${
+            profMode
+              ? "border-stone-800 bg-stone-800 text-white"
+              : "border-stone-300 text-stone-700 hover:bg-stone-50"
+          }`}
         >
-          −
-        </button>
-        <span className="w-12 text-center text-sm text-zinc-600">{Math.round(zoom * 100)}%</span>
-        <button
-          type="button"
-          onClick={() => setZoom((z) => Math.min(ZOOM_MAX, +(z + ZOOM_STEP).toFixed(2)))}
-          disabled={zoom >= ZOOM_MAX}
-          className="flex h-8 w-8 items-center justify-center rounded border border-zinc-300 text-lg font-medium leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-30"
-        >
-          +
+          {profMode ? "Colour view" : "Technical drawing"}
         </button>
       </div>
 
       <div className="overflow-x-auto overflow-y-auto">
-        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width={svgWidth} height={svgHeight} style={{ display: "block" }}>
+        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width={svgWidth} height={svgHeight} style={{ display: "block" }}
+          fontFamily="'Courier New', monospace">
           <g transform={`translate(${MARGIN_LEFT}, ${MARGIN_TOP})`}>
-            <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="#edeae5" stroke="#52525b" strokeWidth={1.5} />
 
-            {placements.map((p) => {
-              const x = centerOffsetPx + p.positionX * pxPerMeter;
-              const y = toSvgY(p.positionY, p.actualHeight);
-              const w = p.actualWidth * pxPerMeter;
-              const h = p.actualHeight * pxPerMeter;
-              const showLabels = w >= MIN_WIDTH_PX_FOR_LABELS && h >= MIN_HEIGHT_PX_FOR_LABELS;
-              const fill = p.defaultColor ?? "#d4d4d8";
-              const { grid } = p;
+            {/* Wall background */}
+            <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx}
+              fill={profMode ? "white" : "#edeae5"}
+              stroke={profMode ? "#111" : "#52525b"}
+              strokeWidth={profMode ? PROF_STROKE_MAIN : 1.5}
+            />
 
-              return (
-                <g key={p.instanceKey}>
-                  {/* Base fill — replaced by product photo when available */}
-                  <rect x={x} y={y} width={w} height={h} fill={fill} stroke="none" />
-                  {p.imageUrl && (
-                    <image
-                      href={p.imageUrl}
-                      x={x} y={y} width={w} height={h}
-                      preserveAspectRatio="xMidYMid slice"
-                    />
-                  )}
+            {/* ── PROFESSIONAL MODE ── */}
+            {profMode ? (
+              <>
+                {placements.map((p) => renderProfessionalItem(p))}
 
-                  {grid ? (
-                    <>
-                      {/* Individual drawer trays rendered in each column bay × drawer block.
-                          The frame color shows through the thin DRAWER_GAP between trays,
-                          making the drawing look like the real stacked-drawer product. */}
-                      {grid.columns
-                        .filter((col) => col.kind === "column")
-                        .flatMap((col) =>
-                          grid.rows
-                            .filter((row) => row.kind === "drawers" && row.drawerCount != null)
-                            .flatMap((row) =>
+                {/* Dimension lines — always shown in professional mode */}
+                <DimensionLine x1={centerOffsetPx} y1={wallHeightPx + 25} x2={centerOffsetPx + usedWidth * pxPerMeter} y2={wallHeightPx + 25}
+                  label={`${usedWidth.toFixed(3)}m`} dashed color="#333" fontSize={dimLineFontSize} />
+                <DimensionLine x1={0} y1={wallHeightPx + 62} x2={wallWidthPx} y2={wallHeightPx + 62}
+                  label={`${wallWidth.toFixed(3)}m`} color="#111" fontSize={dimLineFontSize} />
+                <DimensionLine x1={-30} y1={0} x2={-30} y2={wallHeightPx}
+                  label={`${wallHeight.toFixed(3)}m`} color="#111" fontSize={dimLineFontSize} />
+
+                {/* Title block — bottom right corner like engineering drawings */}
+                <g transform={`translate(${wallWidthPx - 160}, ${wallHeightPx + 10})`}>
+                  <rect x={0} y={0} width={160} height={48} fill="white" stroke="#333" strokeWidth={0.8} />
+                  <line x1={0} y1={16} x2={160} y2={16} stroke="#333" strokeWidth={0.5} />
+                  <line x1={0} y1={32} x2={160} y2={32} stroke="#333" strokeWidth={0.5} />
+                  <text x={4} y={11} fontSize={7} fill="#111" fontWeight="bold">ELEVATION VIEW</text>
+                  <text x={4} y={27} fontSize={7} fill="#555">Scale 1:{Math.round(1 / (pxPerMeter / 1000))}</text>
+                  <text x={4} y={43} fontSize={7} fill="#555">Hospital Storage Configurator</text>
+                </g>
+              </>
+            ) : (
+              /* ── COLOUR MODE ── */
+              <>
+                {placements.map((p) => {
+                  const x = centerOffsetPx + p.positionX * pxPerMeter;
+                  const y = toSvgY(p.positionY, p.actualHeight);
+                  const w = p.actualWidth * pxPerMeter;
+                  const h = p.actualHeight * pxPerMeter;
+                  const showLabels = w >= MIN_WIDTH_PX_FOR_LABELS && h >= MIN_HEIGHT_PX_FOR_LABELS;
+                  const fill = p.defaultColor ?? "#d4d4d8";
+                  const { grid } = p;
+
+                  return (
+                    <g key={p.instanceKey}>
+                      <rect x={x} y={y} width={w} height={h} fill={fill} stroke="none" />
+                      {p.imageUrl && (
+                        <image href={p.imageUrl} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
+                      )}
+
+                      {grid ? (
+                        <>
+                          {grid.columns.filter((col) => col.kind === "column").flatMap((col) =>
+                            grid.rows.filter((row) => row.kind === "drawers" && row.drawerCount != null).flatMap((row) =>
                               Array.from({ length: row.drawerCount! }, (_, di) => {
-                                const drawerDomainY =
-                                  p.positionY + row.offset + di * (DRAWER_HEIGHT + DRAWER_GAP);
+                                const drawerDomainY = p.positionY + row.offset + di * (DRAWER_HEIGHT + DRAWER_GAP);
                                 const drawerSvgY = toSvgY(drawerDomainY, DRAWER_HEIGHT);
                                 const drawerH = DRAWER_HEIGHT * pxPerMeter;
                                 const drawerX = x + col.offset * pxPerMeter;
                                 const drawerW = col.size * pxPerMeter;
                                 const handleH = Math.max(2, drawerH * 0.2);
                                 return (
-                                  <g key={`dr-${col.offset}-${di}`}>
-                                    {/* Drawer tray body */}
-                                    <rect
-                                      x={drawerX} y={drawerSvgY}
-                                      width={drawerW} height={drawerH}
-                                      fill={fill} stroke="#3a5a70" strokeWidth={0.5}
-                                    />
-                                    {/* Pull handle strip at the bottom of each drawer */}
-                                    <rect
-                                      x={drawerX + drawerW * 0.12}
-                                      y={drawerSvgY + drawerH - handleH}
-                                      width={drawerW * 0.76}
-                                      height={handleH}
-                                      fill="rgba(255,255,255,0.28)"
-                                      stroke="none"
-                                    />
+                                  <g key={`dr-${col.offset.toFixed(3)}-${row.offset.toFixed(3)}-${di}`}>
+                                    <rect x={drawerX} y={drawerSvgY} width={drawerW} height={drawerH} fill={fill} stroke="#3a5a70" strokeWidth={0.5} />
+                                    <rect x={drawerX + drawerW * 0.12} y={drawerSvgY + drawerH - handleH}
+                                      width={drawerW * 0.76} height={handleH} fill="rgba(255,255,255,0.28)" stroke="none" />
                                   </g>
                                 );
                               }),
                             ),
-                        )}
+                          )}
 
-                      {/* Column dividers — structural frame vertical strips */}
-                      {grid.columns
-                        .filter((s) => s.kind === "col-divider")
-                        .map((s, i) => (
-                          <rect
-                            key={"cd" + i}
-                            x={x + s.offset * pxPerMeter}
-                            y={y}
-                            width={s.size * pxPerMeter}
-                            height={h}
-                            fill={DIVIDER_COLOR}
-                          />
-                        ))}
+                          {grid.columns.filter((s) => s.kind === "col-divider").map((s, i) => (
+                            <rect key={"cd" + i} x={x + s.offset * pxPerMeter} y={y} width={s.size * pxPerMeter} height={h} fill={DIVIDER_COLOR} />
+                          ))}
+                          {grid.rows.filter((s) => s.kind === "row-divider").map((s, i) => (
+                            <rect key={"rd" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={DIVIDER_COLOR} />
+                          ))}
+                          {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => (
+                            <rect key={"ts" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={TOP_SHELF_COLOR} />
+                          ))}
 
-                      {/* Row dividers — structural frame horizontal strips */}
-                      {grid.rows
-                        .filter((s) => s.kind === "row-divider")
-                        .map((s, i) => (
-                          <rect
-                            key={"rd" + i}
-                            x={x}
-                            y={toSvgY(p.positionY + s.offset, s.size)}
-                            width={w}
-                            height={sectionPxHeight(s)}
-                            fill={DIVIDER_COLOR}
-                          />
-                        ))}
+                          <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
 
-                      {/* Top shelf */}
-                      {grid.rows
-                        .filter((s) => s.kind === "top-shelf")
-                        .map((s, i) => (
-                          <rect
-                            key={"ts" + i}
-                            x={x}
-                            y={toSvgY(p.positionY + s.offset, s.size)}
-                            width={w}
-                            height={sectionPxHeight(s)}
-                            fill={TOP_SHELF_COLOR}
-                          />
-                        ))}
+                          {showAnnotations && grid.columns.map((s, i) => {
+                            const secX = x + s.offset * pxPerMeter;
+                            const secW = s.size * pxPerMeter;
+                            if (secW < annotFontSize * 2.5) return null;
+                            return (
+                              <text key={"ca" + i} x={secX + secW / 2} y={y - 3} textAnchor="middle" dominantBaseline="alphabetic" fontSize={annotFontSize} fill="#374151">
+                                {s.size.toFixed(2)}m
+                              </text>
+                            );
+                          })}
 
-                      {/* Outer border on top of all sections */}
-                      <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
+                          {showAnnotations && grid.rows.map((s, i) => {
+                            const secH = sectionPxHeight(s);
+                            const secY = toSvgY(p.positionY + s.offset, s.size);
+                            if (secH < annotFontSize * 1.2) return null;
+                            const labelM = s.kind === "drawers" ? (s.drawerHeight ?? s.size) : s.size;
+                            return (
+                              <text key={"ra" + i} x={x + w + 4} y={secY + secH / 2 + annotFontSize * 0.35} textAnchor="start" fontSize={annotFontSize} fill="#374151">
+                                {labelM.toFixed(2)}m
+                              </text>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
+                      )}
 
-                      {/* Column width annotations — only visible when zoomed in */}
-                      {showAnnotations && grid.columns.map((s, i) => {
-                        const secX = x + s.offset * pxPerMeter;
-                        const secW = s.size * pxPerMeter;
-                        if (secW < annotFontSize * 2.5) return null;
-                        return (
-                          <text
-                            key={"ca" + i}
-                            x={secX + secW / 2}
-                            y={y - 3}
-                            textAnchor="middle"
-                            dominantBaseline="alphabetic"
-                            fontSize={annotFontSize}
-                            fill="#374151"
-                          >
-                            {s.size.toFixed(2)}m
+                      {showLabels && (
+                        <>
+                          <text x={x + w / 2} y={y + h / 2} textAnchor="middle" dominantBaseline="middle"
+                            fontSize={Math.min(labelFontSize, w / 6)} fill="#27272a">{p.productName}</text>
+                          <text x={x + w / 2} y={y + h - dimFontSize * 0.4} textAnchor="middle" fontSize={dimFontSize} fill="#52525b">
+                            {p.actualWidth.toFixed(2)}×{p.actualHeight.toFixed(2)}m
                           </text>
-                        );
-                      })}
+                        </>
+                      )}
+                    </g>
+                  );
+                })}
 
-                      {/* Row height annotations — only visible when zoomed in */}
-                      {showAnnotations && grid.rows.map((s, i) => {
-                        const secH = sectionPxHeight(s);
-                        const secY = toSvgY(p.positionY + s.offset, s.size);
-                        if (secH < annotFontSize * 1.2) return null;
-                        const labelM =
-                          s.kind === "drawers" ? (s.drawerHeight ?? s.size) : s.size;
-                        return (
-                          <text
-                            key={"ra" + i}
-                            x={x + w + 4}
-                            y={secY + secH / 2 + annotFontSize * 0.35}
-                            textAnchor="start"
-                            fontSize={annotFontSize}
-                            fill="#374151"
-                          >
-                            {labelM.toFixed(2)}m
-                          </text>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    /* No grid data — plain filled box with existing stroke */
-                    <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
-                  )}
-
-                  {/* Product name + overall dimension label (shown regardless of grid) */}
-                  {showLabels && (
-                    <>
-                      <text
-                        x={x + w / 2}
-                        y={y + h / 2}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fontSize={Math.min(labelFontSize, w / 6)}
-                        fill="#27272a"
-                      >
-                        {p.productName}
-                      </text>
-                      <text
-                        x={x + w / 2}
-                        y={y + h - dimFontSize * 0.4}
-                        textAnchor="middle"
-                        fontSize={dimFontSize}
-                        fill="#52525b"
-                      >
-                        {p.actualWidth.toFixed(2)}×{p.actualHeight.toFixed(2)}m
-                      </text>
-                    </>
-                  )}
-                </g>
-              );
-            })}
-
-            <DimensionLine
-              x1={centerOffsetPx}
-              y1={wallHeightPx + 25}
-              x2={centerOffsetPx + usedWidth * pxPerMeter}
-              y2={wallHeightPx + 25}
-              label={`${usedWidth.toFixed(2)}m used`}
-              dashed
-              color="#16a34a"
-              fontSize={dimLineFontSize}
-            />
-            <DimensionLine
-              x1={0}
-              y1={wallHeightPx + 62}
-              x2={wallWidthPx}
-              y2={wallHeightPx + 62}
-              label={`${wallWidth.toFixed(2)}m wall`}
-              fontSize={dimLineFontSize}
-            />
-            <DimensionLine
-              x1={-30}
-              y1={0}
-              x2={-30}
-              y2={wallHeightPx}
-              label={`${wallHeight.toFixed(2)}m`}
-              fontSize={dimLineFontSize}
-            />
+                <DimensionLine x1={centerOffsetPx} y1={wallHeightPx + 25} x2={centerOffsetPx + usedWidth * pxPerMeter} y2={wallHeightPx + 25}
+                  label={`${usedWidth.toFixed(2)}m used`} dashed color="#16a34a" fontSize={dimLineFontSize} />
+                <DimensionLine x1={0} y1={wallHeightPx + 62} x2={wallWidthPx} y2={wallHeightPx + 62}
+                  label={`${wallWidth.toFixed(2)}m wall`} fontSize={dimLineFontSize} />
+                <DimensionLine x1={-30} y1={0} x2={-30} y2={wallHeightPx}
+                  label={`${wallHeight.toFixed(2)}m`} fontSize={dimLineFontSize} />
+              </>
+            )}
           </g>
         </svg>
       </div>
