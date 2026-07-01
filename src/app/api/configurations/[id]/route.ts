@@ -5,7 +5,7 @@ import { resolveDimensions } from "@/lib/layout-engine/dimensions";
 import { packWall } from "@/lib/layout-engine/pack";
 import { LayoutEngineError, type LayoutInputItem, type PlacedInstance } from "@/lib/layout-engine/types";
 import { prisma } from "@/lib/prisma";
-import { CreateConfigurationInputSchema, ParametricConfigSchema } from "@/lib/validation/schemas";
+import { CreateConfigurationInputSchema, LayoutWarningSchema, ParametricConfigSchema } from "@/lib/validation/schemas";
 
 export async function DELETE(
   _req: Request,
@@ -142,7 +142,9 @@ export async function PUT(
         fits: result.fits,
         usedWidth: result.usedWidth,
         usedHeight: result.usedHeight,
-        warnings: result.warnings as unknown as Prisma.InputJsonValue,
+        // Validate warnings through LayoutWarningSchema before storing so
+        // the shape written to the DB always matches what the results page reads.
+        warnings: LayoutWarningSchema.array().parse(result.warnings) as unknown as Prisma.InputJsonValue,
         layoutComputedAt: new Date(),
       },
     });

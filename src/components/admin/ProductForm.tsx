@@ -212,6 +212,11 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
           <span className="mt-1 block text-xs text-zinc-400">
             Lowercase letters, numbers, hyphens. Auto-derived from name.
           </span>
+          {slug === "" && name !== "" && (
+            <span className="mt-1 block text-xs text-amber-600">
+              Name contains no Latin characters — please type a slug manually.
+            </span>
+          )}
         </label>
 
         <div className="grid grid-cols-2 gap-4">
@@ -282,15 +287,19 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
       </div>
 
       {/* Dimension type */}
-      {isEdit && product && (
+      {isEdit && product ? (
         <div className="rounded-lg border border-zinc-200 p-4">
           <ProductImageUploader
             productId={product.id}
             imageId={primaryImage?.id ?? null}
             currentImageUrl={primaryImage?.url ?? null}
-            onUploaded={() => {}}
-            onDeleted={() => {}}
+            onUploaded={() => router.refresh()}
+            onDeleted={() => router.refresh()}
           />
+        </div>
+      ) : (
+        <div className="rounded-lg border border-zinc-100 bg-zinc-50 p-4 text-sm text-zinc-500">
+          Save the product first, then come back to edit it to upload a photo.
         </div>
       )}
 

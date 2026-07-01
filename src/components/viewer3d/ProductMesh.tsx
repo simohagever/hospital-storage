@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Component, Suspense, type ReactNode } from "react";
 import { useTexture } from "@react-three/drei";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 import { DimensionLabel3d } from "./DimensionLabel3d";
@@ -16,10 +16,6 @@ interface ProductMeshProps {
 // Six-material box: the front face (+z, toward the camera) shows the product photo
 // when one has been uploaded; all other faces use the flat default colour.
 // Material order for BoxGeometry: +x, -x, +y, -y, +z (front), -z (back).
-//
-// Note: the texture fills the front face at 100% scale, so if the uploaded photo
-// has a different aspect ratio from the shelf it will be stretched. Upload photos
-// cropped to the product's actual W×H ratio to avoid distortion (v1 known limit).
 function TexturedBox({ w, h, d, color, imageUrl }: { w: number; h: number; d: number; color: string; imageUrl: string }) {
   const texture = useTexture(imageUrl);
   return (
@@ -44,6 +40,21 @@ function FlatBox({ w, h, d, color }: { w: number; h: number; d: number; color: s
   );
 }
 
+// React error boundary to catch useTexture failures (e.g. 404 when a photo
+// is deleted from disk while the 3D scene is open). Falls back to FlatBox
+// so the rest of the scene stays intact rather than crashing entirely.
+interface TextureErrorBoundaryState { error: boolean }
+class TextureErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  TextureErrorBoundaryState
+> {
+  state: TextureErrorBoundaryState = { error: false };
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    return this.state.error ? this.props.fallback : this.props.children;
+  }
+}
+
 export function ProductMesh({ placement: p, centerOffsetX, showDimensions }: ProductMeshProps) {
   const { positionX, positionY, actualWidth, actualHeight, actualDepth, defaultColor, imageUrl } = p;
   const w = actualWidth - VISUAL_GAP;
@@ -52,15 +63,18 @@ export function ProductMesh({ placement: p, centerOffsetX, showDimensions }: Pro
   const cy = positionY + actualHeight / 2;
   const color = defaultColor ?? "#b0b0b0";
   const dimensionText = `${actualWidth.toFixed(2)} × ${actualHeight.toFixed(2)} × ${actualDepth.toFixed(2)}m`;
+  const flatFallback = <FlatBox w={w} h={h} d={actualDepth} color={color} />;
 
   return (
     <group position={[cx, cy, actualDepth / 2]}>
       {imageUrl ? (
-        <Suspense fallback={<FlatBox w={w} h={h} d={actualDepth} color={color} />}>
-          <TexturedBox w={w} h={h} d={actualDepth} color={color} imageUrl={imageUrl} />
-        </Suspense>
+        <TextureErrorBoundary fallback={flatFallback}>
+          <Suspense fallback={flatFallback}>
+            <TexturedBox w={w} h={h} d={actualDepth} color={color} imageUrl={imageUrl} />
+          </Suspense>
+        </TextureErrorBoundary>
       ) : (
-        <FlatBox w={w} h={h} d={actualDepth} color={color} />
+        flatFallback
       )}
 
       {showDimensions && (
