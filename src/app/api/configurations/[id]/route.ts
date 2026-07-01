@@ -85,8 +85,8 @@ export async function PUT(
       };
     });
   } catch (e) {
-    if (e instanceof LayoutEngineError || e instanceof Error) {
-      return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+    if (e instanceof LayoutEngineError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
     }
     throw e;
   }

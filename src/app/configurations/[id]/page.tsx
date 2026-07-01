@@ -65,8 +65,12 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
   // Serialisable BOM data for the PDF export button (client component)
   const bom: BomRow[] = configuration.items.map((item) => {
     const first = item.placedItemInstances[0];
-    const paramsStr = item.params
-      ? Object.entries(item.params as Record<string, number>)
+    const paramsRecord =
+      item.params !== null && typeof item.params === "object" && !Array.isArray(item.params)
+        ? (item.params as Record<string, number>)
+        : null;
+    const paramsStr = paramsRecord
+      ? Object.entries(paramsRecord)
           .map(([k, v]) => `${k}: ${v}`)
           .join(", ")
       : "";

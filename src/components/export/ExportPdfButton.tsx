@@ -5,6 +5,39 @@ import { toPng } from "html-to-image";
 import { buildReport } from "@/lib/pdf/buildReport";
 import type { BomRow } from "@/lib/pdf/buildReport";
 
+// Fetch an image URL and return a data-URI so html-to-image can inline it.
+// html-to-image does fetch same-origin <image href> elements, but SVG <image>
+// nodes with relative hrefs can silently produce a blank in the output if the
+// browser hasn't cached them yet. Pre-converting guarantees they're baked in.
+async function inlineSvgImages(root: HTMLElement): Promise<() => void> {
+  const svgImages = Array.from(root.querySelectorAll<SVGImageElement>("image[href], image[xlink\\:href]"));
+  const restoreFns: Array<() => void> = [];
+
+  await Promise.all(
+    svgImages.map(async (img) => {
+      const href = img.getAttribute("href") ?? img.getAttribute("xlink:href");
+      if (!href || href.startsWith("data:")) return;
+      try {
+        const res = await fetch(href);
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        const original = href;
+        img.setAttribute("href", dataUrl);
+        restoreFns.push(() => img.setAttribute("href", original));
+      } catch {
+        // best-effort — leave the original href in place
+      }
+    }),
+  );
+
+  return () => restoreFns.forEach((fn) => fn());
+}
+
 // Downscale a PNG data URL so neither dimension exceeds maxPx, then re-encode
 // at 0.85 quality to keep PDF file size small enough to email.
 function resizeDataUrl(dataUrl: string, maxPx: number): Promise<string> {
@@ -58,7 +91,10 @@ export function ExportPdfButton({
       elevEl.scrollIntoView({ block: "nearest" });
       // One rAF so any scroll/reflow settles before html-to-image serialises the DOM.
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      // Inline any SVG <image> hrefs as data-URIs so they are baked into the PNG.
+      const restoreSvgImages = await inlineSvgImages(elevEl);
       const rawElevPng = await toPng(elevEl, { pixelRatio: 2, backgroundColor: "#ffffff" });
+      restoreSvgImages();
       const elevPng = await resizeDataUrl(rawElevPng, 2400);
 
       // ── 2. Capture 3D canvas ────────────────────────────────────────────

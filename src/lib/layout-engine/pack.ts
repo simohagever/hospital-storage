@@ -19,6 +19,10 @@ interface RowTracker {
 // to minimize wasted space — placement order is part of the user's input, not
 // something the engine should second-guess.
 export function packWall(wallWidth: number, wallHeight: number, items: LayoutInputItem[]): LayoutResult {
+  if (!(wallWidth > 0) || !(wallHeight > 0)) {
+    return { fits: false, rows: [], placements: [], usedWidth: 0, usedHeight: 0, unplaced: [...items], warnings: [] };
+  }
+
   const sortedItems = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
 
   const placements: PlacedInstance[] = [];

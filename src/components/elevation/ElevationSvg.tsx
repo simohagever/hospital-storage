@@ -45,7 +45,19 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   const svgWidth = wallWidthPx + MARGIN_LEFT + MARGIN_RIGHT;
   const svgHeight = wallHeightPx + MARGIN_TOP + MARGIN_BOTTOM;
 
+  // Compute per-row used widths so each row is independently centered on the wall.
+  // A single global offset from max usedWidth would misalign narrower rows.
+  const rowUsedWidths = new Map<number, number>();
+  for (const p of placements) {
+    rowUsedWidths.set(p.rowIndex, Math.max(rowUsedWidths.get(p.rowIndex) ?? 0, p.positionX + p.actualWidth));
+  }
+  function rowCenterOffset(rowIndex: number): number {
+    const rowUsed = rowUsedWidths.get(rowIndex) ?? usedWidth;
+    return ((wallWidth - rowUsed) / 2) * pxPerMeter;
+  }
+  // Global offset (widest row) used only for the overall usedWidth dimension line.
   const centerOffsetPx = ((wallWidth - usedWidth) / 2) * pxPerMeter;
+
   const labelFontSize = Math.min(28, Math.max(10, Math.round(pxPerMeter * 0.04)));
   const dimFontSize = Math.min(18, Math.max(8, Math.round(pxPerMeter * 0.026)));
   const dimLineFontSize = Math.min(16, Math.max(11, Math.round(pxPerMeter * 0.022)));
@@ -79,7 +91,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   }
 
   function renderProfessionalItem(p: PlacedInstance) {
-    const x = centerOffsetPx + p.positionX * pxPerMeter;
+    const x = rowCenterOffset(p.rowIndex) + p.positionX * pxPerMeter;
     const y = toSvgY(p.positionY, p.actualHeight);
     const w = p.actualWidth * pxPerMeter;
     const h = p.actualHeight * pxPerMeter;
@@ -236,7 +248,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                   const { grid } = first;
                   const fs = Math.max(7, Math.min(9, Math.round(pxPerMeter * 0.011)));
                   const TICK = 6;
-                  const itemX = centerOffsetPx + first.positionX * pxPerMeter;
+                  const itemX = rowCenterOffset(first.rowIndex) + first.positionX * pxPerMeter;
                   const bracketX = itemX - 50;
                   const totalX  = itemX - 118;
                   return (
@@ -299,7 +311,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
               /* ── COLOUR MODE ── */
               <>
                 {placements.map((p) => {
-                  const x = centerOffsetPx + p.positionX * pxPerMeter;
+                  const x = rowCenterOffset(p.rowIndex) + p.positionX * pxPerMeter;
                   const y = toSvgY(p.positionY, p.actualHeight);
                   const w = p.actualWidth * pxPerMeter;
                   const h = p.actualHeight * pxPerMeter;

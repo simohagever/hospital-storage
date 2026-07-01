@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OrbitControls } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { WebGLRenderer } from "three";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 import { FloorPlane } from "./FloorPlane";
@@ -45,12 +45,16 @@ function CanvasCapture({
           });
         });
     }
+  }, [gl, onMount, captureRef]);
 
+  // useFrame fires after real WebGL pixels hit the canvas — unlike useEffect which fires
+  // after the React commit but before the first actual frame has been drawn.
+  useFrame(() => {
     if (onFirstRender && !firedRef.current) {
       firedRef.current = true;
       onFirstRender();
     }
-  }, [gl, onMount, captureRef, onFirstRender]);
+  });
 
   return null;
 }

@@ -1,5 +1,5 @@
 import type { ParametricConfig } from "@/lib/validation/schemas";
-import { COLUMN_DIVIDER, COLUMN_WIDTH, DRAWER_GAP, DRAWER_HEIGHT, ROW_DIVIDER } from "./dimensions";
+import { COLUMN_DIVIDER, COLUMN_WIDTH, DRAWER_GAP, DRAWER_HEIGHT, ROW_DIVIDER, readCount, readNumber } from "./dimensions";
 import type { GridSection, InternalGrid } from "./types";
 
 // Builds the structural section breakdown for one placed parametric item.
@@ -10,17 +10,15 @@ export function computeInternalGrid(
   config: ParametricConfig,
   params: Record<string, number> | null,
 ): InternalGrid {
-  const nColumns = Math.round(params?.[config.columns.paramName] ?? config.columns.defaultValue);
-  const drawersPerCol = Math.round(
-    params?.[config.drawersPerColumn.paramName] ?? config.drawersPerColumn.defaultValue,
-  );
-  const nRows = Math.round(params?.[config.rows.paramName] ?? config.rows.defaultValue);
+  const nColumns = readCount(params, config.columns);
+  const drawersPerCol = readCount(params, config.drawersPerColumn);
+  const nRows = readCount(params, config.rows);
   const rawHasTop = params?.[config.topOption.paramName];
   // == null catches both null and undefined (rawHasTop is undefined when the param
   // is absent from the params map), falling back to the config default.
   const hasTop = rawHasTop == null ? config.topOption.defaultEnabled : rawHasTop !== 0;
   const topHeight = hasTop
-    ? (params?.[config.topOption.heightParamName] ?? config.topOption.defaultHeight)
+    ? readNumber(params, config.topOption.heightParamName, config.topOption.defaultHeight)
     : 0;
 
   // Column sections — left to right: divider, column, divider, column, ..., divider

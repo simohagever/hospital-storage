@@ -22,7 +22,7 @@ export const ROW_DIVIDER = 0.03;
 // stray NaN or non-numeric value can reach here. Comparisons against NaN are always
 // false, which would otherwise let bad data slip silently past the min/max checks
 // below instead of failing loudly.
-function readNumber(params: Record<string, number> | null, paramName: string, fallback: number): number {
+export function readNumber(params: Record<string, number> | null, paramName: string, fallback: number): number {
   const raw = params?.[paramName];
   if (raw == null) return fallback;
   if (!Number.isFinite(raw)) {
@@ -31,7 +31,7 @@ function readNumber(params: Record<string, number> | null, paramName: string, fa
   return raw;
 }
 
-function readCount(params: Record<string, number> | null, setting: CountSetting): number {
+export function readCount(params: Record<string, number> | null, setting: CountSetting): number {
   const raw = readNumber(params, setting.paramName, setting.defaultValue);
   const n = Math.round(raw);
   if (n < setting.min || n > setting.max) {
