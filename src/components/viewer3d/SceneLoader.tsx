@@ -19,6 +19,8 @@ interface SceneLoaderProps {
   wallWidth: number;
   wallHeight: number;
   usedWidth: number;
+  captureRef?: React.RefObject<(() => Promise<string>) | null>;
+  onFirstRender?: () => void;
 }
 
 export function SceneLoader(props: SceneLoaderProps) {

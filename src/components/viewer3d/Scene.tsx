@@ -14,18 +14,48 @@ interface SceneProps {
   wallWidth: number;
   wallHeight: number;
   usedWidth: number;
+  /** Filled on mount with a function that returns a hi-res PNG data URL of the canvas. */
+  captureRef?: React.RefObject<(() => Promise<string>) | null>;
+  /** Called once after the first frame has rendered — use to enable the PDF button. */
+  onFirstRender?: () => void;
 }
 
-// Captures the WebGL renderer ref for use in the PNG snapshot handler.
-function CanvasCapture({ onMount }: { onMount: (gl: WebGLRenderer) => void }) {
+// Wires up the gl renderer ref, the external captureRef, and the onFirstRender callback.
+function CanvasCapture({
+  onMount,
+  captureRef,
+  onFirstRender,
+}: {
+  onMount: (gl: WebGLRenderer) => void;
+  captureRef?: React.RefObject<(() => Promise<string>) | null>;
+  onFirstRender?: () => void;
+}) {
   const gl = useThree((s) => s.gl);
+  const firedRef = useRef(false);
+
   useEffect(() => {
     onMount(gl as unknown as WebGLRenderer);
-  }, [gl, onMount]);
+
+    if (captureRef) {
+      captureRef.current = () =>
+        new Promise((resolve) => {
+          // One rAF ensures the current frame is fully flushed before reading pixels.
+          requestAnimationFrame(() => {
+            resolve((gl as unknown as WebGLRenderer).domElement.toDataURL("image/png"));
+          });
+        });
+    }
+
+    if (onFirstRender && !firedRef.current) {
+      firedRef.current = true;
+      onFirstRender();
+    }
+  }, [gl, onMount, captureRef, onFirstRender]);
+
   return null;
 }
 
-export function Scene({ placements, wallWidth, wallHeight, usedWidth }: SceneProps) {
+export function Scene({ placements, wallWidth, wallHeight, usedWidth, captureRef, onFirstRender }: SceneProps) {
   const [showDimensions, setShowDimensions] = useState(false);
   const glRef = useRef<WebGLRenderer | null>(null);
 
@@ -82,6 +112,7 @@ export function Scene({ placements, wallWidth, wallHeight, usedWidth }: ScenePro
       <div style={{ width: "100%", height: 500 }}>
         <Canvas
           gl={{ preserveDrawingBuffer: true }}
+          dpr={[1, 2]}
           frameloop="always"
           camera={{
             position: [wallWidth / 2, wallHeight / 2, cameraZ],
@@ -90,7 +121,7 @@ export function Scene({ placements, wallWidth, wallHeight, usedWidth }: ScenePro
             far: 1000,
           }}
         >
-          <CanvasCapture onMount={handleMount} />
+          <CanvasCapture onMount={handleMount} captureRef={captureRef} onFirstRender={onFirstRender} />
 
           {/* Room background colour matching the example product photo */}
           <color attach="background" args={["#d8d0c4"]} />

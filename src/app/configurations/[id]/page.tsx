@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { ElevationSvg } from "@/components/elevation/ElevationSvg";
-import { SceneLoader } from "@/components/viewer3d/SceneLoader";
+import { ConfigurationClientSection } from "@/components/export/ConfigurationClientSection";
 import { computeInternalGrid } from "@/lib/layout-engine/computeInternalGrid";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
+import type { BomRow } from "@/lib/pdf/buildReport";
 import { prisma } from "@/lib/prisma";
 import { LayoutWarningSchema, ParametricConfigSchema } from "@/lib/validation/schemas";
 
@@ -62,6 +62,25 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
   const warningsParsed = z.array(LayoutWarningSchema).safeParse(configuration.warnings);
   const warnings = warningsParsed.success ? warningsParsed.data : [];
 
+  // Serialisable BOM data for the PDF export button (client component)
+  const bom: BomRow[] = configuration.items.map((item) => {
+    const first = item.placedItemInstances[0];
+    const paramsStr = item.params
+      ? Object.entries(item.params as Record<string, number>)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ")
+      : "";
+    return {
+      name: item.product.name,
+      qty: item.quantity,
+      placed: item.placedItemInstances.length,
+      width: first?.actualWidth ?? 0,
+      height: first?.actualHeight ?? 0,
+      depth: item.product.depth,
+      params: paramsStr,
+    };
+  });
+
   return (
     <div className="mx-auto max-w-5xl p-6">
       <h1 className="text-2xl font-bold">{configuration.name}</h1>
@@ -79,14 +98,16 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
         </div>
       )}
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-stone-200 p-4">
-        <ElevationSvg
-          placements={placements}
-          wallWidth={configuration.wallWidth}
-          wallHeight={configuration.wallHeight}
-          usedWidth={configuration.usedWidth ?? 0}
-        />
-      </div>
+      {/* ElevationSvg + SceneLoader + ExportPdfButton live together in a client
+          component so they can share the 3D captureRef and the scene-ready flag. */}
+      <ConfigurationClientSection
+        placements={placements}
+        wallWidth={configuration.wallWidth}
+        wallHeight={configuration.wallHeight}
+        usedWidth={configuration.usedWidth ?? 0}
+        bom={bom}
+        configName={configuration.name}
+      />
 
       {warnings.length > 0 && (
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-red-700">
@@ -95,16 +116,6 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
           ))}
         </ul>
       )}
-
-      <h2 className="mt-8 text-lg font-semibold">3D view</h2>
-      <div className="mt-3 overflow-hidden rounded-lg border border-stone-200">
-        <SceneLoader
-          placements={placements}
-          wallWidth={configuration.wallWidth}
-          wallHeight={configuration.wallHeight}
-          usedWidth={configuration.usedWidth ?? 0}
-        />
-      </div>
 
       <h2 className="mt-8 text-lg font-semibold">Bill of materials</h2>
       <ul className="mt-2 divide-y divide-stone-200">

@@ -212,7 +212,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
         </button>
       </div>
 
-      <div className="overflow-x-auto overflow-y-auto">
+      <div id="elevation-export-root" className="overflow-x-auto overflow-y-auto">
         <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width={svgWidth} height={svgHeight} style={{ display: "block" }}
           fontFamily="'Courier New', monospace">
           <g transform={`translate(${MARGIN_LEFT}, ${MARGIN_TOP})`}>
