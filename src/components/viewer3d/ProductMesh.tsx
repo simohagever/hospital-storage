@@ -107,22 +107,10 @@ function DetailedBox({
         });
     });
 
-  // Top section = open shelf bays (like the real product photo).
-  // No solid front panel — the gray frame provides the edges.
-  // A thin horizontal shelf board at the top of the bay suggests the shelf surface.
-  grid.rows
-    .filter((s) => s.kind === "top-shelf")
-    .forEach((s, i) => {
-      const shelfBoardH = 0.018; // shelf board thickness (metres)
-      // Bottom shelf board (the "floor" of the open bay)
-      const bottomY = toLocalY(s.offset + shelfBoardH / 2);
-      drawerPanels.push(
-        <mesh key={`top-bot-${i}`} position={[0, bottomY, 0]}>
-          <boxGeometry args={[w - 0.002, shelfBoardH, d - 0.002]} />
-          <meshStandardMaterial color="#f0ece6" />
-        </mesh>,
-      );
-    });
+  // Top section = open shelf bay.
+  // No overlay — the gray frame box provides all edges and the row-divider
+  // strip (rendered separately) gives the clean boundary at the bottom.
+  // Nothing extra needed here.
 
   return (
     <group>
