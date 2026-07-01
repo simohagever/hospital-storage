@@ -135,18 +135,15 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
     // Top section = open shelf bay: pure white interior, no shelf board overlay.
     // The 0.03m row-divider strip (already in the grid) provides the clean boundary.
     const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
-      const sy = toSvgY(p.positionY + s.offset, s.size);
-      const sh = sectionPxHeight(s);
+      const rawSy = toSvgY(p.positionY + s.offset, s.size);
+      const sy = Math.max(y, rawSy); // clamp — old configs may have smaller stored height
+      const sh = sectionPxHeight(s) - (sy - rawSy);
       const boardPx = Math.max(1, pxPerMeter * 0.016);
-      // 2 shelf boards at 1/3 and 2/3 of the bay height
-      const shelf1Y = sy + sh * 0.33;
-      const shelf2Y = sy + sh * 0.66;
       return (
         <g key={`ts${i}`}>
           <rect x={x} y={sy} width={w} height={sh} fill="white" stroke="none" />
-          {/* Horizontal shelf boards */}
-          <rect x={x} y={shelf1Y} width={w} height={boardPx} fill="#d8d5d0" />
-          <rect x={x} y={shelf2Y} width={w} height={boardPx} fill="#d8d5d0" />
+          <rect x={x} y={sy + sh * 0.33} width={w} height={boardPx} fill="#d8d5d0" />
+          <rect x={x} y={sy + sh * 0.66} width={w} height={boardPx} fill="#d8d5d0" />
         </g>
       );
     });
@@ -346,8 +343,11 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                             <rect key={"rd" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={DIVIDER_COLOR} />
                           ))}
                           {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
-                            const sy = toSvgY(p.positionY + s.offset, s.size);
-                            const sh = sectionPxHeight(s);
+                            // Clamp to the product's outer top edge — old saved configs may have
+                            // a stored actualHeight that differs from the current grid formula.
+                            const rawSy = toSvgY(p.positionY + s.offset, s.size);
+                            const sy = Math.max(y, rawSy);
+                            const sh = sectionPxHeight(s) - (sy - rawSy);
                             const bPx = Math.max(1, pxPerMeter * 0.016);
                             return (
                               <g key={"ts" + i}>

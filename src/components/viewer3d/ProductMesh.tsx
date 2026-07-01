@@ -137,14 +137,25 @@ function DetailedBox({
       });
     });
 
+  // Open structural frame — column divider posts + row divider rails only,
+  // no solid faces, so interior bays are visible (matching the real product frame).
   return (
     <group>
-      {/* Gray cabinet frame */}
-      <mesh>
-        <boxGeometry args={[w, h, d]} />
-        <meshStandardMaterial color={FRAME_COLOR} />
-      </mesh>
-      {/* Drawer fronts and top shelf overlaid on the frame */}
+      {/* Column dividers — vertical strips full height */}
+      {grid.columns.filter((col) => col.kind === "col-divider").map((col, i) => (
+        <mesh key={`cdiv-${i}`} position={[toLocalX(col.offset + col.size / 2), 0, 0]}>
+          <boxGeometry args={[col.size, h, d]} />
+          <meshStandardMaterial color={FRAME_COLOR} />
+        </mesh>
+      ))}
+      {/* Row dividers — horizontal strips full width */}
+      {grid.rows.filter((row) => row.kind === "row-divider").map((row, i) => (
+        <mesh key={`rdiv-${i}`} position={[0, toLocalY(row.offset + row.size / 2), 0]}>
+          <boxGeometry args={[w, row.size, d]} />
+          <meshStandardMaterial color={FRAME_COLOR} />
+        </mesh>
+      ))}
+      {/* Drawer fronts and top-shelf elements */}
       {drawerPanels}
     </group>
   );
