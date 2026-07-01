@@ -94,7 +94,7 @@ describe("computeInternalGrid — rows", () => {
     const n = 1;
     const drawers = 5;
     const { rows } = computeInternalGrid(config, { rows: n, drawersPerColumn: drawers, hasTop: 0 });
-    const drawerBlock = drawers * DRAWER_HEIGHT + (drawers - 1) * DRAWER_GAP;
+    const drawerBlock = drawers * (DRAWER_HEIGHT + DRAWER_GAP);
     const expected = n * drawerBlock + (n + 1) * ROW_DIVIDER;
     const actual = rows.reduce((s, r) => s + r.size, 0);
     expect(actual).toBeCloseTo(expected, 10);
