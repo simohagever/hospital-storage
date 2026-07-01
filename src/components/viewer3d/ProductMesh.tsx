@@ -113,7 +113,6 @@ function DetailedBox({
   grid.rows
     .filter((s) => s.kind === "top-shelf")
     .forEach((s, i) => {
-      const bayTop = s.offset + s.size;
       const bayBot = s.offset;
       const boardH = 0.016; // shelf board thickness
       const shelfPositions = [bayBot + s.size * 0.33, bayBot + s.size * 0.66];
@@ -122,7 +121,7 @@ function DetailedBox({
       drawerPanels.push(
         <mesh key={`top-back-${i}`} position={[0, toLocalY(bayBot + s.size / 2), -d / 2 + 0.01]}>
           <boxGeometry args={[w - 0.004, s.size - 0.004, 0.005]} />
-          <meshBasicMaterial color="#f8f5f0" />
+          <meshBasicMaterial color="#f0e6d8" />
         </mesh>,
       );
 

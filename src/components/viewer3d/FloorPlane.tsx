@@ -15,7 +15,7 @@ export function FloorPlane({ wallWidth }: FloorPlaneProps) {
   return (
     <mesh position={[wallWidth / 2, 0, size / 4]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[size, size]} />
-      <meshBasicMaterial color="#b8b0a4" side={DoubleSide} />
+      <meshBasicMaterial color="#cdc5ba" side={DoubleSide} />
     </mesh>
   );
 }
