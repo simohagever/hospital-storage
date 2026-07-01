@@ -76,10 +76,13 @@ function DetailedBox({
         .forEach((row) => {
           for (let di = 0; di < row.drawerCount!; di++) {
             const drawerDomainY = row.offset + di * (DRAWER_HEIGHT + DRAWER_GAP);
+            // Last drawer fills exactly to the block end — eliminates floating-point gap
+            const isLast3d = di === row.drawerCount! - 1;
+            const drawer3dH = isLast3d ? row.size - di * (DRAWER_HEIGHT + DRAWER_GAP) : DRAWER_HEIGHT;
             const localX = toLocalX(col.offset + col.size / 2);
-            const localY = toLocalY(drawerDomainY + DRAWER_HEIGHT / 2);
+            const localY = toLocalY(drawerDomainY + drawer3dH / 2);
             const panelW = col.size - 0.003;
-            const panelH = DRAWER_HEIGHT - 0.002;
+            const panelH = drawer3dH - 0.002;
             const handleH = DRAWER_HEIGHT * 0.18;
             const key = `drawer-${col.offset.toFixed(3)}-${row.offset.toFixed(3)}-${di}`;
 

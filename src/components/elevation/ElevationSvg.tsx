@@ -102,8 +102,13 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
       grid.rows.filter((row) => row.kind === "drawers" && row.drawerCount != null).forEach((row) => {
         for (let di = 0; di < row.drawerCount!; di++) {
           const drawerDomainY = p.positionY + row.offset + di * (DRAWER_HEIGHT + DRAWER_GAP);
-          const drawerSvgY = toSvgY(drawerDomainY, DRAWER_HEIGHT);
-          const drawerH = DRAWER_HEIGHT * pxPerMeter;
+          // Last drawer fills exactly to the block end to eliminate floating-point gap
+          const isLast = di === row.drawerCount! - 1;
+          const drawerActualH = isLast
+            ? row.size - di * (DRAWER_HEIGHT + DRAWER_GAP)
+            : DRAWER_HEIGHT;
+          const drawerSvgY = toSvgY(drawerDomainY, drawerActualH);
+          const drawerH = drawerActualH * pxPerMeter;
           const drawerX = x + col.offset * pxPerMeter;
           const drawerW = col.size * pxPerMeter;
           const handleH = Math.max(1.5, drawerH * 0.15);
