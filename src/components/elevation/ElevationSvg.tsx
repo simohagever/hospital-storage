@@ -235,23 +235,23 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                       {grid.rows.map((s, i) => {
                         const sy = toSvgY(first.positionY + s.offset, s.size);
                         const sh = s.size * pxPerMeter;
-                        const label = s.kind === "drawers" ? (s.drawerHeight ?? s.size) : s.size;
                         return (
                           <g key={`lsa${i}`}>
                             <line x1={bracketX} y1={sy} x2={bracketX} y2={sy + sh} stroke="#333" strokeWidth={0.8}/>
                             <line x1={bracketX-TICK} y1={sy}    x2={bracketX+TICK} y2={sy}    stroke="#333" strokeWidth={0.8}/>
                             <line x1={bracketX-TICK} y1={sy+sh} x2={bracketX+TICK} y2={sy+sh} stroke="#333" strokeWidth={0.8}/>
-                            {sh >= fs * 1.5 && (
-                              <text x={bracketX-TICK-2} y={sy+sh/2+fs*0.35} textAnchor="end" fontSize={fs} fill="#111">
-                                {label.toFixed(3)}m
-                              </text>
-                            )}
+                            {/* Always show label — for narrow strips offset it outside the bracket */}
+                            <text x={bracketX-TICK-2} y={sh >= fs * 1.5 ? sy+sh/2+fs*0.35 : sy - 2}
+                              textAnchor="end" fontSize={fs} fill="#111">
+                              {s.size.toFixed(3)}m
+                            </text>
                           </g>
                         );
                       })}
                       {(() => {
-                        const topY = toSvgY(first.positionY + first.actualHeight, first.actualHeight);
-                        const botY = topY + first.actualHeight * pxPerMeter;
+                        // topY = SVG y of the top edge of the product; botY = bottom edge
+                        const topY = toSvgY(first.positionY, first.actualHeight);
+                        const botY = toSvgY(first.positionY, 0);
                         return (
                           <g>
                             <line x1={totalX} y1={topY} x2={totalX} y2={botY} stroke="#111" strokeWidth={1.2}/>
