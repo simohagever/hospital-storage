@@ -134,11 +134,22 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
 
     // Top section = open shelf bay: pure white interior, no shelf board overlay.
     // The 0.03m row-divider strip (already in the grid) provides the clean boundary.
-    const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => (
-      <g key={`ts${i}`}>
-        <rect x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill="white" stroke="none" />
-      </g>
-    ));
+    const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
+      const sy = toSvgY(p.positionY + s.offset, s.size);
+      const sh = sectionPxHeight(s);
+      const boardPx = Math.max(1, pxPerMeter * 0.016);
+      // 2 shelf boards at 1/3 and 2/3 of the bay height
+      const shelf1Y = sy + sh * 0.33;
+      const shelf2Y = sy + sh * 0.66;
+      return (
+        <g key={`ts${i}`}>
+          <rect x={x} y={sy} width={w} height={sh} fill="white" stroke="none" />
+          {/* Horizontal shelf boards */}
+          <rect x={x} y={shelf1Y} width={w} height={boardPx} fill="#d8d5d0" />
+          <rect x={x} y={shelf2Y} width={w} height={boardPx} fill="#d8d5d0" />
+        </g>
+      );
+    });
 
     return (
       <g key={p.instanceKey}>
@@ -334,9 +345,18 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                           {grid.rows.filter((s) => s.kind === "row-divider").map((s, i) => (
                             <rect key={"rd" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={DIVIDER_COLOR} />
                           ))}
-                          {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => (
-                            <rect key={"ts" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill="#f5f2ee" stroke="none" />
-                          ))}
+                          {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
+                            const sy = toSvgY(p.positionY + s.offset, s.size);
+                            const sh = sectionPxHeight(s);
+                            const bPx = Math.max(1, pxPerMeter * 0.016);
+                            return (
+                              <g key={"ts" + i}>
+                                <rect x={x} y={sy} width={w} height={sh} fill="#f5f2ee" stroke="none" />
+                                <rect x={x} y={sy + sh * 0.33} width={w} height={bPx} fill={DIVIDER_COLOR} />
+                                <rect x={x} y={sy + sh * 0.66} width={w} height={bPx} fill={DIVIDER_COLOR} />
+                              </g>
+                            );
+                          })}
 
                           <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
 

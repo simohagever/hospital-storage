@@ -107,10 +107,35 @@ function DetailedBox({
         });
     });
 
-  // Top section = open shelf bay.
-  // No overlay — the gray frame box provides all edges and the row-divider
-  // strip (rendered separately) gives the clean boundary at the bottom.
-  // Nothing extra needed here.
+  // Top section = open shelf bays.
+  // Add a white back-panel for interior depth and 2 horizontal shelf boards
+  // dividing the space — matching the real product photo.
+  grid.rows
+    .filter((s) => s.kind === "top-shelf")
+    .forEach((s, i) => {
+      const bayTop = s.offset + s.size;
+      const bayBot = s.offset;
+      const boardH = 0.016; // shelf board thickness
+      const shelfPositions = [bayBot + s.size * 0.33, bayBot + s.size * 0.66];
+
+      // White back panel so the open bay has visible interior depth
+      drawerPanels.push(
+        <mesh key={`top-back-${i}`} position={[0, toLocalY(bayBot + s.size / 2), -d / 2 + 0.01]}>
+          <boxGeometry args={[w - 0.004, s.size - 0.004, 0.005]} />
+          <meshBasicMaterial color="#f8f5f0" />
+        </mesh>,
+      );
+
+      // Horizontal shelf boards dividing the bay into sections
+      shelfPositions.forEach((shelfY, si) => {
+        drawerPanels.push(
+          <mesh key={`top-shelf-${i}-${si}`} position={[0, toLocalY(shelfY + boardH / 2), 0]}>
+            <boxGeometry args={[w - 0.002, boardH, d - 0.002]} />
+            <meshStandardMaterial color="#e8e4de" />
+          </mesh>,
+        );
+      });
+    });
 
   return (
     <group>
