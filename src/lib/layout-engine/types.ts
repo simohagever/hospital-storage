@@ -28,6 +28,7 @@ export interface GridSection {
   size: number;   // metres
   kind: GridSectionKind;
   drawerHeight?: number; // present only on 'drawers' sections: height of ONE drawer
+  drawerCount?: number;  // present only on 'drawers' sections: total number of drawers
 }
 
 export interface InternalGrid {

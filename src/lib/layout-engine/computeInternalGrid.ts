@@ -45,7 +45,7 @@ export function computeInternalGrid(
   for (let r = 0; r < nRows; r++) {
     rows.push({ offset: y, size: ROW_DIVIDER, kind: "row-divider" });
     y += ROW_DIVIDER;
-    rows.push({ offset: y, size: drawerBlockHeight, kind: "drawers", drawerHeight: DRAWER_HEIGHT });
+    rows.push({ offset: y, size: drawerBlockHeight, kind: "drawers", drawerHeight: DRAWER_HEIGHT, drawerCount: drawersPerCol });
     y += drawerBlockHeight;
   }
   rows.push({ offset: y, size: ROW_DIVIDER, kind: "row-divider" });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { GridSection, PlacedInstance } from "@/lib/layout-engine/types";
+import { DRAWER_GAP, DRAWER_HEIGHT } from "@/lib/layout-engine/dimensions";
 import { DimensionLine } from "./DimensionLine";
 
 const MARGIN_LEFT = 60;
@@ -44,6 +45,9 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   const dimFontSize = Math.min(18, Math.max(8, Math.round(pxPerMeter * 0.026)));
   const dimLineFontSize = Math.min(16, Math.max(11, Math.round(pxPerMeter * 0.022)));
   const annotFontSize = Math.max(7, Math.min(10, Math.round(pxPerMeter * 0.013)));
+  // Only show structural dimension annotations when zoomed in enough — below 125%
+  // the labels overlap and clutter the drawing.
+  const showAnnotations = zoom >= 1.25;
 
   function toSvgY(domainY: number, height: number): number {
     return (wallHeight - (domainY + height)) * pxPerMeter;
@@ -103,7 +107,47 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
 
                   {grid ? (
                     <>
-                      {/* Column dividers — full-height darker vertical strips */}
+                      {/* Individual drawer trays rendered in each column bay × drawer block.
+                          The frame color shows through the thin DRAWER_GAP between trays,
+                          making the drawing look like the real stacked-drawer product. */}
+                      {grid.columns
+                        .filter((col) => col.kind === "column")
+                        .flatMap((col) =>
+                          grid.rows
+                            .filter((row) => row.kind === "drawers" && row.drawerCount != null)
+                            .flatMap((row) =>
+                              Array.from({ length: row.drawerCount! }, (_, di) => {
+                                const drawerDomainY =
+                                  p.positionY + row.offset + di * (DRAWER_HEIGHT + DRAWER_GAP);
+                                const drawerSvgY = toSvgY(drawerDomainY, DRAWER_HEIGHT);
+                                const drawerH = DRAWER_HEIGHT * pxPerMeter;
+                                const drawerX = x + col.offset * pxPerMeter;
+                                const drawerW = col.size * pxPerMeter;
+                                const handleH = Math.max(2, drawerH * 0.2);
+                                return (
+                                  <g key={`dr-${col.offset}-${di}`}>
+                                    {/* Drawer tray body */}
+                                    <rect
+                                      x={drawerX} y={drawerSvgY}
+                                      width={drawerW} height={drawerH}
+                                      fill={fill} stroke="#3a5a70" strokeWidth={0.5}
+                                    />
+                                    {/* Pull handle strip at the bottom of each drawer */}
+                                    <rect
+                                      x={drawerX + drawerW * 0.12}
+                                      y={drawerSvgY + drawerH - handleH}
+                                      width={drawerW * 0.76}
+                                      height={handleH}
+                                      fill="rgba(255,255,255,0.28)"
+                                      stroke="none"
+                                    />
+                                  </g>
+                                );
+                              }),
+                            ),
+                        )}
+
+                      {/* Column dividers — structural frame vertical strips */}
                       {grid.columns
                         .filter((s) => s.kind === "col-divider")
                         .map((s, i) => (
@@ -117,7 +161,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                           />
                         ))}
 
-                      {/* Row dividers — full-width darker horizontal strips */}
+                      {/* Row dividers — structural frame horizontal strips */}
                       {grid.rows
                         .filter((s) => s.kind === "row-divider")
                         .map((s, i) => (
@@ -131,7 +175,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                           />
                         ))}
 
-                      {/* Top shelf — slightly darker shade to distinguish it */}
+                      {/* Top shelf */}
                       {grid.rows
                         .filter((s) => s.kind === "top-shelf")
                         .map((s, i) => (
@@ -148,8 +192,8 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                       {/* Outer border on top of all sections */}
                       <rect x={x} y={y} width={w} height={h} fill="none" stroke="#3f3f46" strokeWidth={1} />
 
-                      {/* Column width annotations — small text just above the item */}
-                      {grid.columns.map((s, i) => {
+                      {/* Column width annotations — only visible when zoomed in */}
+                      {showAnnotations && grid.columns.map((s, i) => {
                         const secX = x + s.offset * pxPerMeter;
                         const secW = s.size * pxPerMeter;
                         if (secW < annotFontSize * 2.5) return null;
@@ -168,9 +212,8 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                         );
                       })}
 
-                      {/* Row height annotations — small text to the right of the item.
-                          For 'drawers' sections, show a single drawer height (not total block). */}
-                      {grid.rows.map((s, i) => {
+                      {/* Row height annotations — only visible when zoomed in */}
+                      {showAnnotations && grid.rows.map((s, i) => {
                         const secH = sectionPxHeight(s);
                         const secY = toSvgY(p.positionY + s.offset, s.size);
                         if (secH < annotFontSize * 1.2) return null;
