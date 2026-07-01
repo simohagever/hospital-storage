@@ -130,7 +130,7 @@ function DetailedBox({
         drawerPanels.push(
           <mesh key={`top-shelf-${i}-${si}`} position={[0, toLocalY(shelfY + boardH / 2), 0]}>
             <boxGeometry args={[w - 0.002, boardH, d - 0.002]} />
-            <meshStandardMaterial color="#e8e4de" />
+            <meshStandardMaterial color="#f0e6d8" />
           </mesh>,
         );
       });
