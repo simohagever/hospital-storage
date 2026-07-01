@@ -82,7 +82,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
       <div className="overflow-x-auto overflow-y-auto">
         <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} width={svgWidth} height={svgHeight} style={{ display: "block" }}>
           <g transform={`translate(${MARGIN_LEFT}, ${MARGIN_TOP})`}>
-            <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="white" stroke="#52525b" strokeWidth={1.5} />
+            <rect x={0} y={0} width={wallWidthPx} height={wallHeightPx} fill="#edeae5" stroke="#52525b" strokeWidth={1.5} />
 
             {placements.map((p) => {
               const x = centerOffsetPx + p.positionX * pxPerMeter;

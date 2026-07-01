@@ -92,6 +92,8 @@ export function Scene({ placements, wallWidth, wallHeight, usedWidth }: ScenePro
         >
           <CanvasCapture onMount={handleMount} />
 
+          {/* Room background colour matching the example product photo */}
+          <color attach="background" args={["#d6d1c8"]} />
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 10, 5]} intensity={0.8} />
 

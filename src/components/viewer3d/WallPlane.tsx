@@ -17,7 +17,7 @@ export function WallPlane({ wallWidth, wallHeight }: WallPlaneProps) {
   return (
     <mesh position={[wallWidth / 2, wallHeight / 2, -0.005]}>
       <planeGeometry args={[wallWidth, wallHeight]} />
-      <meshBasicMaterial color="#e8e8e5" side={DoubleSide} />
+      <meshBasicMaterial color="#d6d1c8" side={DoubleSide} />
     </mesh>
   );
 }

@@ -28,7 +28,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-[#faf9f7] text-[#1c1917]">
+      <body className="flex min-h-full flex-col bg-[#f5f3f0] text-[#1c1917]">
         <nav className="sticky top-0 z-50 border-b border-[#e7e5e4] bg-white/90 shadow-sm backdrop-blur-sm">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
             <Link href="/" className="flex items-center gap-2">
