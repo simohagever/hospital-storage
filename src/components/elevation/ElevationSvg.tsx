@@ -5,7 +5,7 @@ import type { GridSection, PlacedInstance } from "@/lib/layout-engine/types";
 import { DRAWER_GAP, DRAWER_HEIGHT } from "@/lib/layout-engine/dimensions";
 import { DimensionLine } from "./DimensionLine";
 
-const MARGIN_LEFT = 110; // extra space on the left for strip-dimension breakdown panel
+const MARGIN_LEFT = 140; // extra space on the left for strip-dimension breakdown panel
 const MARGIN_TOP = 28;
 const MARGIN_RIGHT = 20;
 const MARGIN_BOTTOM = 100;
@@ -229,7 +229,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                   const TICK = 6;
                   const itemX = centerOffsetPx + first.positionX * pxPerMeter;
                   const bracketX = itemX - 50;
-                  const totalX  = itemX - 82;
+                  const totalX  = itemX - 118;
                   return (
                     <g>
                       {grid.rows.map((s, i) => {
