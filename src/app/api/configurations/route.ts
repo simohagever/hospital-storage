@@ -99,42 +99,46 @@ export async function POST(request: Request) {
     placementsByItemId.set(placement.configItemId, list);
   }
 
-  await prisma.wallConfiguration.create({
-    data: {
-      id: configId,
-      name: input.name,
-      wallWidth: input.wallWidth,
-      wallHeight: input.wallHeight,
-      fits: result.fits,
-      usedWidth: result.usedWidth,
-      usedHeight: result.usedHeight,
-      warnings: result.warnings as unknown as Prisma.InputJsonValue,
-      layoutComputedAt: new Date(),
-      items: {
-        create: input.items.map((item, index) => ({
-          id: itemIds[index],
-          productId: item.productId,
-          quantity: item.quantity,
-          params: item.params ?? undefined,
-          sortOrder: item.sortOrder ?? index,
-          placedItemInstances: {
-            create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
-              configurationId: configId,
-              instanceKey: p.instanceKey,
-              actualWidth: p.actualWidth,
-              actualHeight: p.actualHeight,
-              actualDepth: p.actualDepth,
-              positionX: p.positionX,
-              positionY: p.positionY,
-              positionZ: p.positionZ,
-              rowIndex: p.rowIndex,
-              sortOrder: p.sortOrder,
-            })),
-          },
-        })),
+  try {
+    await prisma.wallConfiguration.create({
+      data: {
+        id: configId,
+        name: input.name,
+        wallWidth: input.wallWidth,
+        wallHeight: input.wallHeight,
+        fits: result.fits,
+        usedWidth: result.usedWidth,
+        usedHeight: result.usedHeight,
+        warnings: result.warnings as unknown as Prisma.InputJsonValue,
+        layoutComputedAt: new Date(),
+        items: {
+          create: input.items.map((item, index) => ({
+            id: itemIds[index],
+            productId: item.productId,
+            quantity: item.quantity,
+            params: item.params ?? null,
+            sortOrder: item.sortOrder ?? index,
+            placedItemInstances: {
+              create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
+                configurationId: configId,
+                instanceKey: p.instanceKey,
+                actualWidth: p.actualWidth,
+                actualHeight: p.actualHeight,
+                actualDepth: p.actualDepth,
+                positionX: p.positionX,
+                positionY: p.positionY,
+                positionZ: p.positionZ,
+                rowIndex: p.rowIndex,
+                sortOrder: p.sortOrder,
+              })),
+            },
+          })),
+        },
       },
-    },
-  });
+    });
+  } catch {
+    return NextResponse.json({ error: "Failed to save configuration — please try again." }, { status: 500 });
+  }
 
   // Client only needs the id to navigate to the results page — avoid serialising
   // the entire nested configuration (items + instances) in the response.

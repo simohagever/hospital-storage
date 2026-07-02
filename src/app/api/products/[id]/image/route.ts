@@ -91,7 +91,12 @@ export async function POST(
     });
 
     // DB record committed — promote the temp file to its final name atomically.
-    await rename(tmpPath, finalPath);
+    try {
+      await rename(tmpPath, finalPath);
+    } catch (e) {
+      await unlink(tmpPath).catch(() => undefined);
+      throw e;
+    }
     return NextResponse.json({ id: image.id, url: image.url }, { status: 201 });
   } catch (e) {
     // DB write failed — remove the temp file so nothing leaks to disk.

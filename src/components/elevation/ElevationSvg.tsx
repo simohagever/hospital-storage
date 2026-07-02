@@ -38,6 +38,8 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
   const [zoom, setZoom] = useState(1);
   const [profMode, setProfMode] = useState(false);
 
+  if (!(wallWidth > 0) || !(wallHeight > 0)) return null;
+
   const basePxPerMeter = Math.max(BASE_WALL_WIDTH_PX / wallWidth, MIN_PX_PER_METER);
   const pxPerMeter = basePxPerMeter * zoom;
   const wallWidthPx = wallWidth * pxPerMeter;
@@ -303,7 +305,7 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                   <line x1={0} y1={16} x2={160} y2={16} stroke="#333" strokeWidth={0.5} />
                   <line x1={0} y1={32} x2={160} y2={32} stroke="#333" strokeWidth={0.5} />
                   <text x={4} y={11} fontSize={7} fill="#111" fontWeight="bold">ELEVATION VIEW</text>
-                  <text x={4} y={27} fontSize={7} fill="#555">Scale 1:{[1,2,5,10,20,25,50,100,200].reduce((b,s)=>Math.abs(s-Math.round(1/(pxPerMeter/1000)))<Math.abs(b-Math.round(1/(pxPerMeter/1000)))?s:b)}</text>
+                  <text x={4} y={27} fontSize={7} fill="#555">Scale 1:{(() => { const t = pxPerMeter > 0 ? Math.round(1000 / pxPerMeter) : 1; return [1,2,5,10,20,25,50,100,200].reduce((b,s)=>Math.abs(s-t)<Math.abs(b-t)?s:b); })()}</text>
                   <text x={4} y={43} fontSize={7} fill="#555">Hospital Storage Configurator</text>
                 </g>
               </>

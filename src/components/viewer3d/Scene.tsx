@@ -38,10 +38,14 @@ function CanvasCapture({
 
     if (captureRef) {
       captureRef.current = () =>
-        new Promise((resolve) => {
+        new Promise((resolve, reject) => {
           // One rAF ensures the current frame is fully flushed before reading pixels.
           requestAnimationFrame(() => {
-            resolve((gl as unknown as WebGLRenderer).domElement.toDataURL("image/png"));
+            try {
+              resolve((gl as unknown as WebGLRenderer).domElement.toDataURL("image/png"));
+            } catch (e) {
+              reject(e);
+            }
           });
         });
     }

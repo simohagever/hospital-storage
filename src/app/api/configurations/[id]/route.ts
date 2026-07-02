@@ -103,52 +103,56 @@ export async function PUT(
   // back atomically. Using the callback form (vs array form) means a failure on
   // any individual item create surfaces the specific error rather than a generic
   // "transaction failed" message, making debugging much easier.
-  await prisma.$transaction(async (tx) => {
-    await tx.wallConfigurationItem.deleteMany({ where: { configurationId: id } });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.wallConfigurationItem.deleteMany({ where: { configurationId: id } });
 
-    for (const [index, item] of input.items.entries()) {
-      await tx.wallConfigurationItem.create({
-        data: {
-          id: itemIds[index],
-          configurationId: id,
-          productId: item.productId,
-          quantity: item.quantity,
-          params: item.params ?? undefined,
-          sortOrder: item.sortOrder ?? index,
-          placedItemInstances: {
-            create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
-              configurationId: id,
-              instanceKey: p.instanceKey,
-              actualWidth: p.actualWidth,
-              actualHeight: p.actualHeight,
-              actualDepth: p.actualDepth,
-              positionX: p.positionX,
-              positionY: p.positionY,
-              positionZ: p.positionZ,
-              rowIndex: p.rowIndex,
-              sortOrder: p.sortOrder,
-            })),
+      for (const [index, item] of input.items.entries()) {
+        await tx.wallConfigurationItem.create({
+          data: {
+            id: itemIds[index],
+            configurationId: id,
+            productId: item.productId,
+            quantity: item.quantity,
+            params: item.params ?? null,
+            sortOrder: item.sortOrder ?? index,
+            placedItemInstances: {
+              create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
+                configurationId: id,
+                instanceKey: p.instanceKey,
+                actualWidth: p.actualWidth,
+                actualHeight: p.actualHeight,
+                actualDepth: p.actualDepth,
+                positionX: p.positionX,
+                positionY: p.positionY,
+                positionZ: p.positionZ,
+                rowIndex: p.rowIndex,
+                sortOrder: p.sortOrder,
+              })),
+            },
           },
+        });
+      }
+
+      await tx.wallConfiguration.update({
+        where: { id },
+        data: {
+          name: input.name,
+          wallWidth: input.wallWidth,
+          wallHeight: input.wallHeight,
+          fits: result.fits,
+          usedWidth: result.usedWidth,
+          usedHeight: result.usedHeight,
+          // Validate warnings through LayoutWarningSchema before storing so
+          // the shape written to the DB always matches what the results page reads.
+          warnings: LayoutWarningSchema.array().parse(result.warnings) as unknown as Prisma.InputJsonValue,
+          layoutComputedAt: new Date(),
         },
       });
-    }
-
-    await tx.wallConfiguration.update({
-      where: { id },
-      data: {
-        name: input.name,
-        wallWidth: input.wallWidth,
-        wallHeight: input.wallHeight,
-        fits: result.fits,
-        usedWidth: result.usedWidth,
-        usedHeight: result.usedHeight,
-        // Validate warnings through LayoutWarningSchema before storing so
-        // the shape written to the DB always matches what the results page reads.
-        warnings: LayoutWarningSchema.array().parse(result.warnings) as unknown as Prisma.InputJsonValue,
-        layoutComputedAt: new Date(),
-      },
     });
-  });
+  } catch {
+    return NextResponse.json({ error: "Failed to save configuration — please try again." }, { status: 500 });
+  }
 
   return NextResponse.json({ id, fits: result.fits });
 }
