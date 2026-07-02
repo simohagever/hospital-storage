@@ -141,7 +141,7 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
             type="button"
             disabled={!preview}
             onClick={() => onAdd(product.id, quantity, parametricConfig ? params : null)}
-            className="rounded bg-[#292524] px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-[#0369A1] px-3 py-1.5 text-sm text-white transition-colors duration-150 hover:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 disabled:opacity-50 cursor-pointer"
           >
             Add
           </button>

@@ -5,21 +5,28 @@
   --foreground: #1c1917;
   --muted: #78716c;
   --border: #e7e5e4;
-  --primary: #292524;
-  --primary-hover: #44403c;
-  --accent: #b45309;
+  --primary: #0369A1;
+  --primary-hover: #0284c7;
+  --accent: #0369A1;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

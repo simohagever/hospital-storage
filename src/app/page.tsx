@@ -26,13 +26,13 @@ export default async function HomePage() {
         <div className="flex gap-2">
           <Link
             href="/products"
-            className="rounded border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-[#faf9f7]"
+            className="rounded border border-[#0369A1] px-4 py-2 text-sm text-[#0369A1] transition-colors duration-150 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
           >
             Product catalog
           </Link>
           <Link
             href="/configurations/new"
-            className="rounded bg-[#292524] px-4 py-2 text-sm text-white hover:bg-[#44403c]"
+            className="rounded bg-[#0369A1] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
           >
             New configuration
           </Link>

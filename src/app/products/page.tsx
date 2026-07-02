@@ -18,7 +18,7 @@ export default async function ProductsPage() {
         <h1 className="text-2xl font-bold">Product catalog</h1>
         <Link
           href="/products/new"
-          className="rounded bg-[#292524] px-4 py-2 text-sm text-white hover:bg-[#44403c]"
+          className="rounded bg-[#0369A1] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
         >
           Add product
         </Link>
