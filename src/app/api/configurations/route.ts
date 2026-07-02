@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     placementsByItemId.set(placement.configItemId, list);
   }
 
-  const created = await prisma.wallConfiguration.create({
+  await prisma.wallConfiguration.create({
     data: {
       id: configId,
       name: input.name,
@@ -119,10 +119,6 @@ export async function POST(request: Request) {
           sortOrder: item.sortOrder ?? index,
           placedItemInstances: {
             create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
-              // The DB trigger re-derives this from configurationItemId on insert
-              // regardless of what's passed here — see schema.prisma's comment on
-              // PlacedItemInstance.configurationId. Still required to satisfy the
-              // column's NOT NULL constraint at the Prisma type level.
               configurationId: configId,
               instanceKey: p.instanceKey,
               actualWidth: p.actualWidth,
@@ -138,8 +134,9 @@ export async function POST(request: Request) {
         })),
       },
     },
-    include: { items: { include: { placedItemInstances: true } } },
   });
 
-  return NextResponse.json(created, { status: 201 });
+  // Client only needs the id to navigate to the results page — avoid serialising
+  // the entire nested configuration (items + instances) in the response.
+  return NextResponse.json({ id: configId, fits: result.fits }, { status: 201 });
 }

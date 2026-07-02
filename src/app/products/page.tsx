@@ -50,7 +50,7 @@ export default async function ProductsPage() {
                     </div>
                     <p className="mt-0.5 text-sm text-stone-500">
                       {p.dimensionType === "FIXED"
-                        ? `${p.width?.toFixed(3)}m × ${p.height?.toFixed(3)}m × ${p.depth.toFixed(3)}m`
+                        ? `${p.width != null ? p.width.toFixed(3) : "?"}m × ${p.height != null ? p.height.toFixed(3) : "?"}m × ${p.depth.toFixed(3)}m`
                         : `Parametric · col width ${COLUMN_WIDTH.toFixed(3)}m · drawer height ${DRAWER_HEIGHT.toFixed(3)}m · depth ${p.depth.toFixed(3)}m`}
                     </p>
                   </div>

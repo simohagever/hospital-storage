@@ -92,9 +92,15 @@ export function ExportPdfButton({
       // One rAF so any scroll/reflow settles before html-to-image serialises the DOM.
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
       // Inline any SVG <image> hrefs as data-URIs so they are baked into the PNG.
+      // restoreSvgImages is called in finally so the DOM is always put back even if
+      // toPng throws (e.g. a cross-origin resource or an oversized canvas).
       const restoreSvgImages = await inlineSvgImages(elevEl);
-      const rawElevPng = await toPng(elevEl, { pixelRatio: 2, backgroundColor: "#ffffff" });
-      restoreSvgImages();
+      let rawElevPng: string;
+      try {
+        rawElevPng = await toPng(elevEl, { pixelRatio: 2, backgroundColor: "#ffffff" });
+      } finally {
+        restoreSvgImages();
+      }
       const elevPng = await resizeDataUrl(rawElevPng, 2400);
 
       // ── 2. Capture 3D canvas ────────────────────────────────────────────

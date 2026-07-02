@@ -80,14 +80,21 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
     value: string,
   ) {
     const num = Number(value);
+    // Ignore updates that would write NaN into the config (e.g. partially-cleared
+    // numeric inputs). The existing value stays in place until the user types a
+    // valid number, so the form never submits a corrupted parametricConfig.
+    if (!Number.isFinite(num)) return;
     setParametricConfig((c) => ({ ...c, [field]: { ...c[field], [key]: num } }));
   }
 
   function updateTopOption(key: string, value: string | boolean) {
-    setParametricConfig((c) => ({
-      ...c,
-      topOption: { ...c.topOption, [key]: typeof value === "boolean" ? value : Number(value) },
-    }));
+    if (typeof value !== "boolean") {
+      const num = Number(value);
+      if (!Number.isFinite(num)) return;
+      setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: num } }));
+      return;
+    }
+    setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: value } }));
   }
 
   async function handleSubmit(e: React.SyntheticEvent) {

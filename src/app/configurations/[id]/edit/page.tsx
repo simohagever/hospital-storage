@@ -33,14 +33,17 @@ export default async function EditConfigurationPage({
   // state to useLiveLayout; with safeParse we fall back to null (defaults) instead.
   const paramsSchema = z.record(z.string(), z.number()).nullable();
   let counter = 0;
-  const initialItems: SelectedItem[] = configuration.items.map((item) => ({
-    tempId: `existing-${counter++}`,
-    productId: item.productId,
-    quantity: item.quantity,
-    params: paramsSchema.safeParse(item.params).success
-      ? (item.params as Record<string, number> | null)
-      : null,
-  }));
+  const initialItems: SelectedItem[] = configuration.items.map((item) => {
+    const paramsResult = paramsSchema.safeParse(item.params);
+    return {
+      tempId: `existing-${counter++}`,
+      productId: item.productId,
+      quantity: item.quantity,
+      // Use the zod-validated output, not the raw Prisma JsonValue cast, so any
+      // coercions or refinements applied by the schema are actually in effect.
+      params: paramsResult.success ? paramsResult.data : null,
+    };
+  });
 
   return (
     <div className="mx-auto max-w-5xl p-6">

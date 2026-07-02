@@ -1,33 +1,28 @@
 "use client";
 
-import { Html } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 
 interface DimensionLabel3dProps {
   position: [number, number, number];
   text: string;
 }
 
-// Renders a dimension label anchored to a 3D position using drei's Html helper,
-// which attaches a real DOM element to the scene. This is more reliable than
-// troika-three-text (<Text>) since it requires no async font loading.
+// Uses drei <Text> (troika-three-text) which renders glyph geometry directly into
+// the WebGL scene, so labels appear in canvas.toDataURL() PNG snapshots.
+// <Html> was the previous implementation but it attaches a real DOM overlay that
+// the WebGL renderer never sees when the canvas is captured.
 export function DimensionLabel3d({ position, text }: DimensionLabel3dProps) {
   return (
-    <Html position={position} center distanceFactor={3}>
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #d1d5db",
-          borderRadius: 4,
-          padding: "2px 6px",
-          fontSize: 11,
-          fontFamily: "sans-serif",
-          color: "#374151",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-        }}
-      >
-        {text}
-      </div>
-    </Html>
+    <Text
+      position={position}
+      fontSize={0.06}
+      color="#374151"
+      anchorX="center"
+      anchorY="middle"
+      outlineWidth={0.008}
+      outlineColor="white"
+    >
+      {text}
+    </Text>
   );
 }

@@ -42,21 +42,22 @@ export function buildReport(options: {
   let cursorY = margin + 22;
 
   // ── 2D elevation ──────────────────────────────────────────────────────────
-  const elevProps = doc.getImageProperties(options.elevationPng);
-  const elevAspect = elevProps.width / elevProps.height;
-  const elevH = contentW / elevAspect;
+  if (options.elevationPng) {
+    const elevProps = doc.getImageProperties(options.elevationPng);
+    const elevAspect = elevProps.width / elevProps.height;
+    const elevH = contentW / elevAspect;
 
-  if (cursorY + elevH + 10 > pageH - margin) {
-    doc.addPage();
-    cursorY = margin;
+    if (cursorY + elevH + 10 > pageH - margin) {
+      doc.addPage();
+      cursorY = margin;
+    }
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("2D Elevation", margin, cursorY);
+    cursorY += 5;
+    doc.addImage(options.elevationPng, "PNG", margin, cursorY, contentW, elevH, undefined, "MEDIUM");
+    cursorY += elevH + 8;
   }
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("2D Elevation", margin, cursorY);
-  cursorY += 5;
-  // MEDIUM compression keeps file size manageable without quality loss
-  doc.addImage(options.elevationPng, "PNG", margin, cursorY, contentW, elevH, undefined, "MEDIUM");
-  cursorY += elevH + 8;
 
   // ── 3D snapshot ───────────────────────────────────────────────────────────
   if (options.scene3dPng) {
@@ -107,6 +108,10 @@ export function buildReport(options: {
     margin: { left: margin, right: margin },
   });
 
-  const safeFileName = options.configName.replace(/[^a-z0-9]/gi, "-").replace(/-+/g, "-");
+  const safeFileName =
+    options.configName
+      .replace(/[^a-z0-9]/gi, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "") || "report";
   doc.save(`${safeFileName}.pdf`);
 }

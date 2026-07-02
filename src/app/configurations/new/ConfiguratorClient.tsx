@@ -88,7 +88,13 @@ export function ConfiguratorClient({ products, configurationId, initialData }: C
       );
       const body = await response.json();
       if (!response.ok) {
-        setSubmitState({ status: "error", message: body.error ?? "Failed to save configuration" });
+        // If the server returned structured validation issues, surface the first one
+        // so the user sees a specific message rather than generic "Invalid input".
+        const firstIssue =
+          Array.isArray(body.issues) && body.issues.length > 0
+            ? `: ${body.issues[0].message}`
+            : "";
+        setSubmitState({ status: "error", message: (body.error ?? "Failed to save configuration") + firstIssue });
         return;
       }
       router.push(`/configurations/${body.id}`);

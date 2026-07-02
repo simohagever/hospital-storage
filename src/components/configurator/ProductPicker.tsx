@@ -131,7 +131,10 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
             type="number"
             min={1}
             value={quantity}
-            onChange={(e) => setQuantity(e.target.valueAsNumber)}
+            onChange={(e) => {
+              const v = e.target.valueAsNumber;
+              setQuantity(Number.isFinite(v) && v >= 1 ? Math.round(v) : 1);
+            }}
             className="w-16 rounded border border-stone-300 px-2 py-1 text-sm"
           />
           <button
