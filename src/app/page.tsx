@@ -75,9 +75,10 @@ export default async function HomePage() {
                     )}
                     <time
                       dateTime={config.createdAt.toISOString()}
+                      title={config.createdAt.toISOString()}
                       className="text-xs text-zinc-400"
                     >
-                      {config.createdAt.toISOString().slice(0, 10)}
+                      {config.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                     </time>
                     <Link
                       href={`/configurations/${config.id}/edit`}

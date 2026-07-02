@@ -131,9 +131,17 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
         ))}
       </ul>
 
-      <Link href="/configurations/new" className="mt-6 inline-block text-sm text-stone-500 hover:underline">
-        Create another configuration
-      </Link>
+      <div className="mt-8 flex items-center gap-4 border-t border-stone-200 pt-6">
+        <Link href="/" className="text-sm text-stone-500 hover:underline">
+          ← All configurations
+        </Link>
+        <Link href="/configurations/new" className="text-sm text-stone-500 hover:underline">
+          + New configuration
+        </Link>
+        <Link href={`/configurations/${id}/edit`} className="text-sm text-stone-500 hover:underline">
+          Edit this configuration
+        </Link>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { NavLinks } from "@/components/ui/NavLinks";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,17 +38,7 @@ export default function RootLayout({
               </span>
               <span className="text-sm font-semibold text-[#1c1917]">Hospital Storage</span>
             </Link>
-            <div className="flex items-center gap-1 text-sm">
-              <Link href="/" className="rounded-md px-3 py-1.5 text-[#78716c] transition-colors hover:bg-[#f5f4f2] hover:text-[#1c1917]">
-                Configurations
-              </Link>
-              <Link href="/configurations/new" className="rounded-md px-3 py-1.5 text-[#78716c] transition-colors hover:bg-[#f5f4f2] hover:text-[#1c1917]">
-                New
-              </Link>
-              <Link href="/products" className="rounded-md px-3 py-1.5 text-[#78716c] transition-colors hover:bg-[#f5f4f2] hover:text-[#1c1917]">
-                Products
-              </Link>
-            </div>
+            <NavLinks />
           </div>
         </nav>
         <main className="flex-1">{children}</main>

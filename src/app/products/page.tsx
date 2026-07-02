@@ -27,8 +27,11 @@ export default async function ProductsPage() {
       <div className="mt-8 space-y-8">
         {Object.entries(byCategory).map(([category, items]) => (
           <section key={category}>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
               {category}
+              <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-normal normal-case text-stone-600">
+                {items.length}
+              </span>
             </h2>
             <ul className="divide-y divide-stone-200 rounded-lg border border-stone-200">
               {items.map((p) => (
