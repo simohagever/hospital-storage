@@ -1,8 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-
-const ADMIN_COOKIE = "admin_auth";
-const COOKIE_MAX_AGE = 60 * 60 * 8; // 8 hours
+import { ADMIN_COOKIE, COOKIE_MAX_AGE } from "@/lib/admin-cookie";
 
 function sha256Hex(input: string): string {
   return createHash("sha256").update(input).digest("hex");
@@ -50,6 +48,15 @@ export async function POST(request: Request) {
 
 export async function DELETE() {
   const response = NextResponse.json({ ok: true });
-  response.cookies.delete(ADMIN_COOKIE);
+  // Explicitly pass the same attributes used when setting the cookie so all
+  // browsers correctly expire it — some implementations ignore a bare delete
+  // if the path doesn't match.
+  response.cookies.set(ADMIN_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: "/",
+  });
   return response;
 }

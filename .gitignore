@@ -42,4 +42,5 @@ next-env.d.ts
 
 /src/generated/prisma
 graphify-out/
-public/uploads/
+public/uploads/*
+!public/uploads/.gitkeep

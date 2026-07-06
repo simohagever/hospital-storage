@@ -66,20 +66,26 @@ export async function POST(
     // Serialise find-delete-create in a transaction so two simultaneous uploads
     // for the same product cannot both find and try to delete the same oldPrimary
     // row, which would cause the second request to throw P2025 (record not found).
+    // deleteStoredImage is intentionally outside the transaction — a filesystem op
+    // inside a DB transaction can hold the connection open and, if it throws, rolls
+    // back the DB delete while the file may already be gone.
+    let oldPrimaryUrl: string | null = null;
     const image = await prisma.$transaction(async (tx) => {
       const oldPrimary = await tx.productImage.findFirst({
         where: { productId: id, isPrimary: true },
       });
       if (oldPrimary) {
+        oldPrimaryUrl = oldPrimary.url;
         await tx.productImage.delete({ where: { id: oldPrimary.id } });
-        // Best-effort — file is unreachable once the DB row is gone, so don't
-        // let a failed delete abort the transaction.
-        await deleteStoredImage(oldPrimary.url);
       }
       return tx.productImage.create({
         data: { productId: id, url: publicUrl, kind: "FRONT", isPrimary: true },
       });
     });
+
+    // DB committed — now safe to remove the old file. Best-effort: if it fails
+    // the DB row is already gone so the file becomes unreachable anyway.
+    if (oldPrimaryUrl) await deleteStoredImage(oldPrimaryUrl);
 
     // DB record committed — promote the temp file to its final name atomically.
     try {

@@ -34,3 +34,13 @@ export const prisma = new Proxy({} as PrismaClient, {
     return (getClient() as any)[prop];
   },
 });
+
+// Railway sends SIGTERM when redeploying. Without this handler the process exits
+// immediately, leaving Postgres connections open until the server-side idle timeout
+// closes them — which can exhaust the connection pool before the new container starts.
+if (process.env.NODE_ENV === "production") {
+  process.once("SIGTERM", async () => {
+    await _client?.$disconnect().catch(() => undefined);
+    process.exit(0);
+  });
+}

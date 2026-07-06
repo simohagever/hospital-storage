@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-
-const ADMIN_COOKIE = "admin_auth";
+import { ADMIN_COOKIE } from "@/lib/admin-cookie";
 
 const ADMIN_PAGE_PREFIX = "/products";
 const ADMIN_API_PREFIX = "/api/products";
