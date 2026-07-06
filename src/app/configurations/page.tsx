@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { DeleteConfigButton } from "@/components/admin/DeleteConfigButton";
 import { prisma } from "@/lib/prisma";
