@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { COLUMN_WIDTH, DRAWER_HEIGHT } from "@/lib/layout-engine/dimensions";
+import { ParametricConfigSchema } from "@/lib/validation/schemas";
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
@@ -54,7 +54,12 @@ export default async function ProductsPage() {
                     <p className="mt-0.5 text-sm text-stone-500">
                       {p.dimensionType === "FIXED"
                         ? `${p.width != null ? p.width.toFixed(3) : "?"}m × ${p.height != null ? p.height.toFixed(3) : "?"}m × ${p.depth.toFixed(3)}m`
-                        : `Parametric · col width ${COLUMN_WIDTH.toFixed(3)}m · drawer height ${DRAWER_HEIGHT.toFixed(3)}m · depth ${p.depth.toFixed(3)}m`}
+                        : (() => {
+                            const cfg = ParametricConfigSchema.safeParse(p.parametricConfig);
+                            if (!cfg.success) return `Parametric · depth ${p.depth.toFixed(3)}m`;
+                            const c = cfg.data;
+                            return `${c.columns.label} ${c.columns.min}–${c.columns.max}, ${c.drawersPerColumn.label} ${c.drawersPerColumn.min}–${c.drawersPerColumn.max} · depth ${p.depth.toFixed(3)}m`;
+                          })()}
                     </p>
                   </div>
                   <Link

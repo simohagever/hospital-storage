@@ -17,6 +17,8 @@ export const COLUMN_DIVIDER = 0.03;
 export const DRAWER_HEIGHT = 0.1;
 export const DRAWER_GAP = 0.01;
 export const ROW_DIVIDER = 0.03;
+export const SHELF_HEIGHT = 0.1;
+export const SHELF_GAP = 0.01;
 
 // params comes from WallConfigurationItem.params, an unvalidated Json? column — so a
 // stray NaN or non-numeric value can reach here. Comparisons against NaN are always

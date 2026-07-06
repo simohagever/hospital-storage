@@ -84,9 +84,11 @@ export function ExportPdfButton({
   disabled,
 }: ExportPdfButtonProps) {
   const [status, setStatus] = useState<"idle" | "capturing" | "building">("idle");
+  const [exportError, setExportError] = useState<string | null>(null);
 
   async function handleExport() {
     setStatus("capturing");
+    setExportError(null);
     try {
       // ── 1. Capture 2D elevation ─────────────────────────────────────────
       const elevEl = document.getElementById(elevationId);
@@ -119,7 +121,7 @@ export function ExportPdfButton({
       buildReport({ elevationPng: elevPng, scene3dPng, configName, wallWidth, wallHeight, bom });
     } catch (err) {
       console.error("PDF export failed:", err);
-      alert("Export failed — please try again.");
+      setExportError("Export failed — please try again.");
     } finally {
       setStatus("idle");
     }
@@ -133,17 +135,22 @@ export function ExportPdfButton({
   const tooltip = disabled && !isWorking ? "Waiting for 3D viewer to load…" : undefined;
 
   return (
-    <button
-      type="button"
-      onClick={handleExport}
-      disabled={disabled || isWorking}
-      title={tooltip}
-      className="rounded border border-stone-700 bg-stone-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {isWorking && (
-        <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent align-middle" />
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={handleExport}
+        disabled={disabled || isWorking}
+        title={tooltip}
+        className="rounded border border-stone-700 bg-stone-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isWorking && (
+          <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent align-middle" />
+        )}
+        {label}
+      </button>
+      {exportError && (
+        <p className="text-sm text-red-600">{exportError}</p>
       )}
-      {label}
-    </button>
+    </div>
   );
 }

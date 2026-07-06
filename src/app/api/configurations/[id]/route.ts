@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { resolveDimensions } from "@/lib/layout-engine/dimensions";
 import { packWall } from "@/lib/layout-engine/pack";
@@ -88,6 +89,14 @@ export async function PUT(
     if (e instanceof LayoutEngineError) {
       return NextResponse.json({ error: e.message }, { status: 400 });
     }
+    if (e instanceof ZodError) {
+      // A stored product's parametricConfig failed schema validation — not the
+      // requester's fault, but we can't proceed. Return a clean 500.
+      return NextResponse.json(
+        { error: "A referenced product's stored configuration is invalid. Please contact support." },
+        { status: 500 },
+      );
+    }
     throw e;
   }
 
@@ -114,7 +123,7 @@ export async function PUT(
             configurationId: id,
             productId: item.productId,
             quantity: item.quantity,
-            params: item.params ?? null,
+            params: item.params ?? Prisma.DbNull,
             sortOrder: item.sortOrder ?? index,
             placedItemInstances: {
               create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
@@ -150,7 +159,8 @@ export async function PUT(
         },
       });
     });
-  } catch {
+  } catch (e) {
+    console.error("Failed to update configuration:", e);
     return NextResponse.json({ error: "Failed to save configuration — please try again." }, { status: 500 });
   }
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { NavLinks } from "@/components/ui/NavLinks";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import "./globals.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -43,6 +44,7 @@ export default function RootLayout({
           </div>
         </nav>
         <main className="flex-1">{children}</main>
+        <ProgressBar />
       </body>
     </html>
   );

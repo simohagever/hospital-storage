@@ -116,7 +116,7 @@ export async function POST(request: Request) {
             id: itemIds[index],
             productId: item.productId,
             quantity: item.quantity,
-            params: item.params ?? null,
+            params: item.params ?? Prisma.DbNull,
             sortOrder: item.sortOrder ?? index,
             placedItemInstances: {
               create: (placementsByItemId.get(itemIds[index]) ?? []).map((p) => ({
@@ -136,7 +136,8 @@ export async function POST(request: Request) {
         },
       },
     });
-  } catch {
+  } catch (e) {
+    console.error("Failed to save configuration:", e);
     return NextResponse.json({ error: "Failed to save configuration — please try again." }, { status: 500 });
   }
 

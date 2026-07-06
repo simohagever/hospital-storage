@@ -132,7 +132,7 @@ export function Scene({ placements, wallWidth, wallHeight, usedWidth, captureRef
           <CanvasCapture onMount={handleMount} captureRef={captureRef} onFirstRender={onFirstRender} />
 
           {/* Room background colour matching the example product photo */}
-          <color attach="background" args={["#d8d0c4"]} />
+          <color attach="background" args={["#6b7280"]} />
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 10, 5]} intensity={0.8} />
 

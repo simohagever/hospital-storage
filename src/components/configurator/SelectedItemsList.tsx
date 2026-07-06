@@ -27,6 +27,7 @@ function formatParams(product: Product | undefined, params: Record<string, numbe
     [config.rows.paramName, config.rows.label],
     [config.topOption.paramName, config.topOption.label],
     [config.topOption.heightParamName, config.topOption.heightLabel],
+    [config.topOption.shelvesCount.paramName, config.topOption.shelvesCount.label],
   ]);
 
   return Object.entries(params)

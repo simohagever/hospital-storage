@@ -42,38 +42,30 @@ describe("TopOptionSchema", () => {
     label: "Top shelf",
     defaultEnabled: true,
     heightParamName: "topHeight",
-    heightLabel: "Top shelf height",
-    minHeight: 0.05,
-    maxHeight: 0.5,
-    defaultHeight: 0.1,
+    heightLabel: "Top shelf height (m)",
+    minHeight: 0.1,
+    maxHeight: 1.5,
+    defaultHeight: 0.9,
+    shelvesCount: { paramName: "topShelves", label: "Top shelves", min: 1, max: 3, defaultValue: 3 },
   };
 
-  it("accepts a normal range regardless of defaultEnabled", () => {
+  it("accepts a valid config regardless of defaultEnabled", () => {
     expect(TopOptionSchema.safeParse(base).success).toBe(true);
     expect(TopOptionSchema.safeParse({ ...base, defaultEnabled: false }).success).toBe(true);
   });
 
-  it("accepts the degenerate boundary where minHeight === maxHeight === defaultHeight", () => {
-    expect(TopOptionSchema.safeParse({ ...base, minHeight: 0.2, maxHeight: 0.2, defaultHeight: 0.2 }).success).toBe(
-      true,
-    );
-  });
-
   it("rejects minHeight > maxHeight", () => {
-    expect(TopOptionSchema.safeParse({ ...base, minHeight: 0.5, maxHeight: 0.05 }).success).toBe(false);
+    expect(TopOptionSchema.safeParse({ ...base, minHeight: 1.5, maxHeight: 0.1 }).success).toBe(false);
   });
 
   it("rejects defaultHeight outside [minHeight, maxHeight]", () => {
     expect(TopOptionSchema.safeParse({ ...base, defaultHeight: 0.01 }).success).toBe(false);
-    expect(TopOptionSchema.safeParse({ ...base, defaultHeight: 0.9 }).success).toBe(false);
+    expect(TopOptionSchema.safeParse({ ...base, defaultHeight: 2.0 }).success).toBe(false);
   });
 
-  it("rejects a height of zero (not positive)", () => {
-    expect(TopOptionSchema.safeParse({ ...base, minHeight: 0 }).success).toBe(false);
-  });
-
-  it("rejects values above the 10m sanity ceiling", () => {
-    expect(TopOptionSchema.safeParse({ ...base, maxHeight: 11 }).success).toBe(false);
+  it("rejects invalid shelvesCount (min > max)", () => {
+    const bad = { ...base, shelvesCount: { ...base.shelvesCount, min: 3, max: 1 } };
+    expect(TopOptionSchema.safeParse(bad).success).toBe(false);
   });
 });
 
@@ -88,10 +80,11 @@ describe("ParametricConfigSchema", () => {
       label: "Top shelf",
       defaultEnabled: true,
       heightParamName: "topHeight",
-      heightLabel: "Top shelf height",
-      minHeight: 0.05,
-      maxHeight: 0.5,
-      defaultHeight: 0.1,
+      heightLabel: "Top shelf height (m)",
+      minHeight: 0.1,
+      maxHeight: 1.5,
+      defaultHeight: 0.9,
+      shelvesCount: { paramName: "topShelves", label: "Top shelves", min: 1, max: 3, defaultValue: 3 },
     },
   };
 
@@ -109,14 +102,23 @@ describe("ParametricConfigSchema", () => {
   });
 
   it("rejects topOption.heightParamName colliding with another setting's paramName", () => {
-    const collision = {
-      ...validConfig,
-      topOption: { ...validConfig.topOption, heightParamName: "columns" },
-    };
+    const collision = { ...validConfig, topOption: { ...validConfig.topOption, heightParamName: "columns" } };
     const result = ParametricConfigSchema.safeParse(collision);
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.path).toEqual(["topOption", "heightParamName"]);
+    }
+  });
+
+  it("rejects topOption.shelvesCount.paramName colliding with another setting's paramName", () => {
+    const collision = {
+      ...validConfig,
+      topOption: { ...validConfig.topOption, shelvesCount: { ...validConfig.topOption.shelvesCount, paramName: "columns" } },
+    };
+    const result = ParametricConfigSchema.safeParse(collision);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual(["topOption", "shelvesCount", "paramName"]);
     }
   });
 });

@@ -5,7 +5,23 @@ import { ProductInputSchema } from "@/lib/validation/schemas";
 export async function GET() {
   const products = await prisma.product.findMany({
     orderBy: [{ category: "asc" }, { name: "asc" }],
-    include: { _count: { select: { images: true } } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      category: true,
+      description: true,
+      depth: true,
+      dimensionType: true,
+      width: true,
+      height: true,
+      parametricConfig: true,
+      defaultColor: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { images: true } },
+    },
   });
   return NextResponse.json(products);
 }

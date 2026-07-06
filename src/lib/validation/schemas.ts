@@ -35,11 +35,10 @@ export const TopOptionSchema = z
     defaultEnabled: z.boolean(),
     heightParamName: z.string().min(1),
     heightLabel: z.string().min(1),
-    // 10 (meters) is a sanity ceiling for a height field, not a real business limit —
-    // .max(1000) would be meaningless here since these are meters, not unit counts.
     minHeight: z.number().positive().max(10),
     maxHeight: z.number().positive().max(10),
     defaultHeight: z.number().positive().max(10),
+    shelvesCount: CountSettingSchema, // how many internal shelves (1–3)
   })
   .refine((s) => s.minHeight <= s.maxHeight, {
     message: "minHeight must be less than or equal to maxHeight",
@@ -65,6 +64,7 @@ export const ParametricConfigSchema = z
       [config.rows.paramName, ["rows", "paramName"]],
       [config.topOption.paramName, ["topOption", "paramName"]],
       [config.topOption.heightParamName, ["topOption", "heightParamName"]],
+      [config.topOption.shelvesCount.paramName, ["topOption", "shelvesCount", "paramName"]],
     ];
 
     for (const [name, path] of entries) {

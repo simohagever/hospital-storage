@@ -107,17 +107,17 @@ function DetailedBox({
         });
     });
 
-  // Top section = open shelf bays.
-  // Add a white back-panel for interior depth and 2 horizontal shelf boards
-  // dividing the space — matching the real product photo.
+  // Top section: solid cover panel at the very top, then open shelf bays below it.
   grid.rows
     .filter((s) => s.kind === "top-shelf")
     .forEach((s, i) => {
       const bayBot = s.offset;
+      const coverH = 0.017; // 17mm melamine top cover panel
       const boardH = 0.016; // shelf board thickness
-      const shelfPositions = [bayBot + s.size * 0.33, bayBot + s.size * 0.66];
+      const nShelves = s.shelvesCount ?? 3;
+      const interiorH = s.size - coverH;
 
-      // White back panel so the open bay has visible interior depth
+      // White back panel for visible interior depth
       drawerPanels.push(
         <mesh key={`top-back-${i}`} position={[0, toLocalY(bayBot + s.size / 2), -d / 2 + 0.01]}>
           <boxGeometry args={[w - 0.004, s.size - 0.004, 0.005]} />
@@ -125,15 +125,26 @@ function DetailedBox({
         </mesh>,
       );
 
-      // Horizontal shelf boards dividing the bay into sections
-      shelfPositions.forEach((shelfY, si) => {
+      // Solid cover panel at the very top of the section
+      const coverLocalY = toLocalY(bayBot + s.size - coverH / 2);
+      drawerPanels.push(
+        <mesh key={`top-cover-${i}`} position={[0, coverLocalY, 0]}>
+          <boxGeometry args={[w - 0.002, coverH, d - 0.002]} />
+          <meshStandardMaterial color={FRAME_COLOR} />
+        </mesh>,
+      );
+
+      // Horizontal shelf boards dividing the interior into nShelves equal bays
+      for (let bi = 0; bi < nShelves - 1; bi++) {
+        const frac = (bi + 1) / nShelves;
+        const shelfDomainY = bayBot + interiorH * frac;
         drawerPanels.push(
-          <mesh key={`top-shelf-${i}-${si}`} position={[0, toLocalY(shelfY + boardH / 2), 0]}>
+          <mesh key={`top-shelf-${i}-${bi}`} position={[0, toLocalY(shelfDomainY + boardH / 2), 0]}>
             <boxGeometry args={[w - 0.002, boardH, d - 0.002]} />
             <meshStandardMaterial color="#f0e6d8" />
           </mesh>,
         );
-      });
+      }
     });
 
   // Open structural frame — column divider posts + row divider rails only,

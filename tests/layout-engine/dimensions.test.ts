@@ -14,10 +14,11 @@ const cellBoxesConfig: ParametricConfig = {
     label: "Top shelf",
     defaultEnabled: true,
     heightParamName: "topHeight",
-    heightLabel: "Top shelf height",
-    minHeight: 0.05,
-    maxHeight: 0.5,
-    defaultHeight: 0.1,
+    heightLabel: "Top shelf height (m)",
+    minHeight: 0.1,
+    maxHeight: 1.5,
+    defaultHeight: 0.9,
+    shelvesCount: { paramName: "topShelves", label: "Top shelves", min: 1, max: 3, defaultValue: 3 },
   },
 };
 
@@ -64,9 +65,9 @@ describe("resolveDimensions / PARAMETRIC", () => {
     const result = resolveDimensions(parametricProduct, null);
     // width: 3 * 0.332 + 4 * 0.03 = 1.116
     // oneRowHeight: 5 * (0.1 + 0.01) = 0.55; rowsHeight: 1 * 0.55 + 2 * 0.03 = 0.61
-    // height: rowsHeight + default topHeight (0.1) = 0.71
+    // topHeight: defaultHeight = 0.9; total height = 0.61 + 0.9 = 1.51
     expect(result.width).toBeCloseTo(1.116, 10);
-    expect(result.height).toBeCloseTo(0.71, 10);
+    expect(result.height).toBeCloseTo(1.51, 10);
     expect(result.depth).toBe(0.455);
   });
 
@@ -108,6 +109,7 @@ describe("resolveDimensions / PARAMETRIC", () => {
   });
 
   it("throws when the top shelf height is outside its configured range", () => {
-    expect(() => resolveDimensions(parametricProduct, { hasTop: 1, topHeight: 0.6 })).toThrow(LayoutEngineError);
+    expect(() => resolveDimensions(parametricProduct, { hasTop: 1, topHeight: 0.01 })).toThrow(LayoutEngineError);
+    expect(() => resolveDimensions(parametricProduct, { hasTop: 1, topHeight: 2.0 })).toThrow(LayoutEngineError);
   });
 });

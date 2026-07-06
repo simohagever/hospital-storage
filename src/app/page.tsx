@@ -1,98 +1,34 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { DeleteConfigButton } from "@/components/admin/DeleteConfigButton";
 
-export default async function HomePage() {
-  const configurations = await prisma.wallConfiguration.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      wallWidth: true,
-      wallHeight: true,
-      fits: true,
-      createdAt: true,
-      _count: { select: { items: true } },
-    },
-  });
-
+export default function HomePage() {
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Wall configurations</h1>
-          <p className="mt-1 text-sm text-zinc-500">Hospital storage furniture configurator</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href="/products"
-            className="rounded border border-[#0369A1] px-4 py-2 text-sm text-[#0369A1] transition-colors duration-150 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
-          >
-            Product catalog
-          </Link>
+    <>
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <div className="bg-[#0369A1] px-6 py-24 text-center text-white">
+        <p className="text-xs font-semibold uppercase tracking-widest text-sky-200">
+          Hospital Storage
+        </p>
+        <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+          Storage Configurator
+        </h1>
+        <p className="mt-3 text-sky-100">
+          Design wall layouts · 2D &amp; 3D preview · Export to PDF
+        </p>
+        <div className="mt-8 flex justify-center gap-3">
           <Link
             href="/configurations/new"
-            className="rounded bg-[#0369A1] px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
+            className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-[#0369A1] shadow transition-colors hover:bg-sky-50"
           >
-            New configuration
+            New configuration →
+          </Link>
+          <Link
+            href="/configurations"
+            className="rounded-lg border border-white/40 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+          >
+            My configurations
           </Link>
         </div>
       </div>
-
-      <div className="mt-8">
-        {configurations.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 p-12 text-center">
-            <p className="text-zinc-500">No configurations yet.</p>
-            <Link
-              href="/configurations/new"
-              className="mt-4 inline-block rounded bg-[#292524] px-4 py-2 text-sm text-white hover:bg-[#44403c]"
-            >
-              Create your first configuration
-            </Link>
-          </div>
-        ) : (
-          <ul className="divide-y divide-[#e7e5e4] rounded-xl border border-[#e7e5e4] bg-white shadow-sm">
-            {configurations.map((config) => (
-              <li key={config.id} className="flex items-center justify-between gap-4 p-4">
-                <Link href={`/configurations/${config.id}`} className="flex-1 hover:underline">
-                  <p className="font-medium">{config.name}</p>
-                  <p className="mt-0.5 text-sm text-zinc-500">
-                    {config.wallWidth.toFixed(2)}m × {config.wallHeight.toFixed(2)}m &middot;{" "}
-                    {config._count.items} product line{config._count.items === 1 ? "" : "s"}
-                  </p>
-                </Link>
-                <div className="flex shrink-0 items-center gap-3">
-                    {config.fits !== null && (
-                      <span
-                        className={`rounded border px-2 py-0.5 text-xs font-medium ${
-                          config.fits
-                            ? "border-green-300 bg-green-50 text-green-700"
-                            : "border-red-300 bg-red-50 text-red-700"
-                        }`}
-                      >
-                        {config.fits ? "Fits" : "Doesn't fit"}
-                      </span>
-                    )}
-                    <time
-                      dateTime={config.createdAt.toISOString()}
-                      title={config.createdAt.toISOString()}
-                      className="text-xs text-zinc-400"
-                    >
-                      {config.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                    </time>
-                    <Link
-                      href={`/configurations/${config.id}/edit`}
-                      className="text-sm text-zinc-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <DeleteConfigButton id={config.id} name={config.name} />
-                  </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+    </>
   );
 }

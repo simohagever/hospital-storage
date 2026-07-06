@@ -27,8 +27,9 @@ export interface GridSection {
   offset: number; // metres from the item's left edge (columns) or bottom edge (rows)
   size: number;   // metres
   kind: GridSectionKind;
-  drawerHeight?: number; // present only on 'drawers' sections: height of ONE drawer
-  drawerCount?: number;  // present only on 'drawers' sections: total number of drawers
+  drawerHeight?: number;  // present only on 'drawers' sections: height of ONE drawer
+  drawerCount?: number;   // present only on 'drawers' sections: total number of drawers
+  shelvesCount?: number;  // present only on 'top-shelf' sections: number of shelves
 }
 
 export interface InternalGrid {

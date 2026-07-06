@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ProductInputSchema } from "@/lib/validation/schemas";
 
@@ -40,7 +41,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         depth,
         dimensionType,
         ...(dimensionType === "FIXED"
-          ? { width: parsed.data.width, height: parsed.data.height, parametricConfig: undefined }
+          ? { width: parsed.data.width, height: parsed.data.height, parametricConfig: Prisma.DbNull }
           : { parametricConfig: parsed.data.parametricConfig, width: null, height: null }),
       },
     });

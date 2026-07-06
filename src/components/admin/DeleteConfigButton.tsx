@@ -26,7 +26,7 @@ export function DeleteConfigButton({ id, name }: { id: string; name: string }) {
       // If the user is on the detail page for this config, redirect home —
       // refresh() would hit the deleted record and land on a 404.
       if (pathname.includes(id)) {
-        router.push("/");
+        router.push("/configurations");
       } else {
         router.refresh();
       }

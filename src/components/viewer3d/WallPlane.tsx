@@ -2,6 +2,7 @@
 
 import { DoubleSide } from "three";
 
+
 interface WallPlaneProps {
   wallWidth: number;
   wallHeight: number;
@@ -17,7 +18,7 @@ export function WallPlane({ wallWidth, wallHeight }: WallPlaneProps) {
   return (
     <mesh position={[wallWidth / 2, wallHeight / 2, -0.005]}>
       <planeGeometry args={[wallWidth, wallHeight]} />
-      <meshStandardMaterial color="#f0e6d8" side={DoubleSide} />
+      <meshBasicMaterial color="#d8d4ce" side={DoubleSide} />
     </mesh>
   );
 }

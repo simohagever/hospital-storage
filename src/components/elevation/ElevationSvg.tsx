@@ -146,18 +146,24 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
       <ProfProfile key={`rp${i}`} id={`rp${i}`} x={x} y={toSvgY(p.positionY + s.offset, s.size)} w={w} h={sectionPxHeight(s)} />,
     );
 
-    // Top section = open shelf bay: pure white interior, no shelf board overlay.
-    // The 0.03m row-divider strip (already in the grid) provides the clean boundary.
+    // Top section: solid cover panel at top, then nShelves equal open bays below it.
     const topShelves = grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
       const rawSy = toSvgY(p.positionY + s.offset, s.size);
-      const sy = Math.max(y, rawSy); // clamp — old configs may have smaller stored height
+      const sy = Math.max(y, rawSy);
       const sh = sectionPxHeight(s) - (sy - rawSy);
       const boardPx = Math.max(1, pxPerMeter * 0.016);
+      const coverPx = Math.max(2, pxPerMeter * 0.017); // 17mm top cover panel
+      const nShelves = s.shelvesCount ?? 3;
+      const innerH = sh - coverPx;
+      const boards = Array.from({ length: nShelves - 1 }, (_, bi) => {
+        const frac = (bi + 1) / nShelves;
+        return <rect key={bi} x={x} y={sy + coverPx + innerH * frac} width={w} height={boardPx} fill="#d8d5d0" />;
+      });
       return (
         <g key={`ts${i}`}>
           <rect x={x} y={sy} width={w} height={sh} fill="white" stroke="none" />
-          <rect x={x} y={sy + sh * 0.33} width={w} height={boardPx} fill="#d8d5d0" />
-          <rect x={x} y={sy + sh * 0.66} width={w} height={boardPx} fill="#d8d5d0" />
+          <rect x={x} y={sy} width={w} height={coverPx} fill="#d8d5d0" />
+          {boards}
         </g>
       );
     });
@@ -357,17 +363,21 @@ export function ElevationSvg({ placements, wallWidth, wallHeight, usedWidth }: E
                             <rect key={"rd" + i} x={x} y={toSvgY(p.positionY + s.offset, s.size)} width={w} height={sectionPxHeight(s)} fill={DIVIDER_COLOR} />
                           ))}
                           {grid.rows.filter((s) => s.kind === "top-shelf").map((s, i) => {
-                            // Clamp to the product's outer top edge — old saved configs may have
-                            // a stored actualHeight that differs from the current grid formula.
                             const rawSy = toSvgY(p.positionY + s.offset, s.size);
                             const sy = Math.max(y, rawSy);
                             const sh = sectionPxHeight(s) - (sy - rawSy);
                             const bPx = Math.max(1, pxPerMeter * 0.016);
+                            const coverPx = Math.max(2, pxPerMeter * 0.017);
+                            const nShelves = s.shelvesCount ?? 3;
+                            const innerH = sh - coverPx;
                             return (
                               <g key={"ts" + i}>
                                 <rect x={x} y={sy} width={w} height={sh} fill="#f5f2ee" stroke="none" />
-                                <rect x={x} y={sy + sh * 0.33} width={w} height={bPx} fill={DIVIDER_COLOR} />
-                                <rect x={x} y={sy + sh * 0.66} width={w} height={bPx} fill={DIVIDER_COLOR} />
+                                <rect x={x} y={sy} width={w} height={coverPx} fill={DIVIDER_COLOR} />
+                                {Array.from({ length: nShelves - 1 }, (_, bi) => {
+                                  const frac = (bi + 1) / nShelves;
+                                  return <rect key={bi} x={x} y={sy + coverPx + innerH * frac} width={w} height={bPx} fill={DIVIDER_COLOR} />;
+                                })}
                               </g>
                             );
                           })}

@@ -18,10 +18,11 @@ const config: ParametricConfig = {
     label: "Top shelf",
     defaultEnabled: true,
     heightParamName: "topHeight",
-    heightLabel: "Top shelf height",
-    minHeight: 0.05,
-    maxHeight: 0.5,
-    defaultHeight: 0.1,
+    heightLabel: "Top shelf height (m)",
+    minHeight: 0.1,
+    maxHeight: 1.5,
+    defaultHeight: 0.9,
+    shelvesCount: { paramName: "topShelves", label: "Top shelves", min: 1, max: 3, defaultValue: 3 },
   },
 };
 
@@ -78,11 +79,12 @@ describe("computeInternalGrid — rows", () => {
     expect(block.drawerHeight).toBeCloseTo(DRAWER_HEIGHT, 10);
   });
 
-  it("top shelf appears when hasTop=1 and has the configured height", () => {
-    const { rows } = computeInternalGrid(config, { hasTop: 1, topHeight: 0.15 });
+  it("top shelf appears when hasTop=1, carries the given height and shelvesCount", () => {
+    const { rows } = computeInternalGrid(config, { hasTop: 1, topHeight: 0.6, topShelves: 2 });
     const top = rows.find((r) => r.kind === "top-shelf")!;
     expect(top).toBeDefined();
-    expect(top.size).toBeCloseTo(0.15, 10);
+    expect(top.size).toBeCloseTo(0.6, 10);
+    expect(top.shelvesCount).toBe(2);
   });
 
   it("no top shelf when hasTop=0", () => {

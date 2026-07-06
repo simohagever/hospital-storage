@@ -1,8 +1,12 @@
-import { mkdir, rename, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  commitImageTemp,
+  deleteStoredImage,
+  removeImageTemp,
+  writeImageTemp,
+} from "@/lib/storage/imageStore";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -15,10 +19,6 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/gif": "gif",
 };
 const ALLOWED_TYPES = Object.keys(MIME_TO_EXT);
-
-// NOTE: images are stored on the local filesystem under public/uploads/.
-// This works for local dev and self-hosted deployments. For platforms with
-// ephemeral storage (Vercel, Fly.io) move to a cloud bucket (S3, GCS) in v2.
 
 export async function POST(
   request: Request,
@@ -55,19 +55,12 @@ export async function POST(
     );
   }
 
-  // Derive extension from the validated MIME type — never trust the client filename.
   const ext = MIME_TO_EXT[file.type] ?? "jpg";
   const filename = `${randomUUID()}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads", "products", id);
-  const finalPath = path.join(dir, filename);
-  const tmpPath = `${finalPath}.tmp`;
-  const publicUrl = `/uploads/products/${id}/${filename}`;
-
-  await mkdir(dir, { recursive: true });
   const buffer = Buffer.from(await file.arrayBuffer());
-  // Write to a temp file first. The rename below is atomic on POSIX — if anything
-  // between here and the DB commit fails, no permanent file is left on disk.
-  await writeFile(tmpPath, buffer);
+
+  // Write to a temp file first — atomic rename after DB commit prevents orphaned files.
+  const { publicUrl, tmpPath } = await writeImageTemp(id, filename, buffer);
 
   try {
     // Serialise find-delete-create in a transaction so two simultaneous uploads
@@ -79,11 +72,9 @@ export async function POST(
       });
       if (oldPrimary) {
         await tx.productImage.delete({ where: { id: oldPrimary.id } });
-        // Best-effort file removal — after the DB record is gone the file is
-        // unreachable even if unlink fails (e.g. permissions), so don't let a
-        // failed unlink abort the transaction.
-        const oldFilePath = path.join(process.cwd(), "public", oldPrimary.url);
-        await unlink(oldFilePath).catch(() => undefined);
+        // Best-effort — file is unreachable once the DB row is gone, so don't
+        // let a failed delete abort the transaction.
+        await deleteStoredImage(oldPrimary.url);
       }
       return tx.productImage.create({
         data: { productId: id, url: publicUrl, kind: "FRONT", isPrimary: true },
@@ -92,15 +83,15 @@ export async function POST(
 
     // DB record committed — promote the temp file to its final name atomically.
     try {
-      await rename(tmpPath, finalPath);
+      await commitImageTemp(tmpPath, id, filename);
     } catch (e) {
-      await unlink(tmpPath).catch(() => undefined);
+      await removeImageTemp(tmpPath);
       throw e;
     }
     return NextResponse.json({ id: image.id, url: image.url }, { status: 201 });
   } catch (e) {
     // DB write failed — remove the temp file so nothing leaks to disk.
-    await unlink(tmpPath).catch(() => undefined);
+    await removeImageTemp(tmpPath);
     throw e;
   }
 }
@@ -119,9 +110,16 @@ export async function DELETE(
   if (!image) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // Delete the physical file first (best-effort), then the DB record.
-  const filePath = path.join(process.cwd(), "public", image.url);
-  await unlink(filePath).catch(() => undefined);
+  await deleteStoredImage(image.url);
 
-  await prisma.productImage.delete({ where: { id: body.imageId } });
+  try {
+    await prisma.productImage.delete({ where: { id: body.imageId } });
+  } catch (e: unknown) {
+    // P2025: already deleted by a concurrent request — treat as idempotent success.
+    if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2025") {
+      return new NextResponse(null, { status: 204 });
+    }
+    throw e;
+  }
   return new NextResponse(null, { status: 204 });
 }

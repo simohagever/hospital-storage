@@ -30,6 +30,7 @@ const DEFAULT_PARAMETRIC_CONFIG: ParametricConfig = {
     minHeight: 0.05,
     maxHeight: 0.5,
     defaultHeight: 0.1,
+    shelvesCount: { paramName: "topShelves", label: "Top shelves", min: 1, max: 3, defaultValue: 3 },
   },
 };
 
@@ -79,22 +80,32 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
     key: string,
     value: string,
   ) {
+    // paramName and label are text fields — store as strings directly.
+    if (key === "paramName" || key === "label") {
+      setParametricConfig((c) => ({ ...c, [field]: { ...c[field], [key]: value } }));
+      return;
+    }
+    // Numeric fields (min, max, defaultValue): ignore partially-cleared inputs
+    // that would write NaN into the config.
     const num = Number(value);
-    // Ignore updates that would write NaN into the config (e.g. partially-cleared
-    // numeric inputs). The existing value stays in place until the user types a
-    // valid number, so the form never submits a corrupted parametricConfig.
     if (!Number.isFinite(num)) return;
     setParametricConfig((c) => ({ ...c, [field]: { ...c[field], [key]: num } }));
   }
 
   function updateTopOption(key: string, value: string | boolean) {
-    if (typeof value !== "boolean") {
-      const num = Number(value);
-      if (!Number.isFinite(num)) return;
-      setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: num } }));
+    if (typeof value === "boolean") {
+      setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: value } }));
       return;
     }
-    setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: value } }));
+    // Text fields — store as strings directly without Number() conversion.
+    if (key === "paramName" || key === "label" || key === "heightParamName" || key === "heightLabel") {
+      setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: value } }));
+      return;
+    }
+    // Numeric fields (minHeight, maxHeight, defaultHeight): ignore NaN.
+    const num = Number(value);
+    if (!Number.isFinite(num)) return;
+    setParametricConfig((c) => ({ ...c, topOption: { ...c.topOption, [key]: num } }));
   }
 
   async function handleSubmit(e: React.SyntheticEvent) {
@@ -443,7 +454,7 @@ export function ProductForm({ product, primaryImage }: ProductFormProps) {
           <button
             type="button"
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={deleting || saving}
             className="text-sm text-red-600 hover:underline disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete product"}

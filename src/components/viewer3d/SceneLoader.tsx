@@ -1,5 +1,6 @@
 "use client";
 
+import { Component, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 
@@ -23,6 +24,53 @@ interface SceneLoaderProps {
   onFirstRender?: () => void;
 }
 
+interface EBState { failed: boolean; retries: number }
+
+class SceneErrorBoundary extends Component<{ children: ReactNode }, EBState> {
+  state: EBState = { failed: false, retries: 0 };
+
+  static getDerivedStateFromError(): Partial<EBState> {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("[SceneLoader] 3D viewer crashed:", error);
+  }
+
+  handleRetry = () => {
+    this.setState((s) => ({ failed: false, retries: s.retries + 1 }));
+  };
+
+  render() {
+    if (this.state.failed) {
+      const isRepeatFail = this.state.retries > 0;
+      return (
+        <div className="flex h-[500px] flex-col items-center justify-center gap-2 text-sm text-stone-400">
+          <p>
+            {isRepeatFail
+              ? "3D viewer failed again — your browser or device may not support WebGL."
+              : "3D viewer failed to load."}
+          </p>
+          {!isRepeatFail && (
+            <button
+              type="button"
+              onClick={this.handleRetry}
+              className="rounded border border-stone-300 px-3 py-1 text-xs hover:bg-stone-50"
+            >
+              Try again
+            </button>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function SceneLoader(props: SceneLoaderProps) {
-  return <SceneDynamic {...props} />;
+  return (
+    <SceneErrorBoundary>
+      <SceneDynamic {...props} />
+    </SceneErrorBoundary>
+  );
 }

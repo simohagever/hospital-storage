@@ -31,6 +31,7 @@ function defaultParamsFor(config: ParametricConfig): Record<string, number> {
     [config.rows.paramName]: config.rows.defaultValue,
     [config.topOption.paramName]: config.topOption.defaultEnabled ? 1 : 0,
     [config.topOption.heightParamName]: config.topOption.defaultHeight,
+    [config.topOption.shelvesCount.paramName]: config.topOption.shelvesCount.defaultValue,
   };
 }
 
@@ -101,17 +102,29 @@ function ProductPickerRow({ product, onAdd }: { product: Product; onAdd: Product
               {parametricConfig.topOption.label}
             </label>
             {hasTop && (
-              <input
-                type="number"
-                step="0.01"
-                min={parametricConfig.topOption.minHeight}
-                max={parametricConfig.topOption.maxHeight}
-                value={Number.isFinite(params[parametricConfig.topOption.heightParamName]) ? params[parametricConfig.topOption.heightParamName] : ""}
-                onChange={(e) =>
-                  setParams((p) => ({ ...p, [parametricConfig.topOption.heightParamName]: e.target.valueAsNumber }))
-                }
-                className="mt-1 w-full rounded border border-stone-300 px-2 py-1 text-sm"
-              />
+              <>
+                <label className="block text-sm">
+                  <span className="block font-medium text-stone-700">{parametricConfig.topOption.heightLabel}</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min={parametricConfig.topOption.minHeight}
+                    max={parametricConfig.topOption.maxHeight}
+                    value={Number.isFinite(params[parametricConfig.topOption.heightParamName]) ? params[parametricConfig.topOption.heightParamName] : ""}
+                    onChange={(e) => {
+                      const v = e.target.valueAsNumber;
+                      if (Number.isFinite(v))
+                        setParams((p) => ({ ...p, [parametricConfig.topOption.heightParamName]: v }));
+                    }}
+                    className="mt-1 w-full rounded border border-stone-300 px-2 py-1"
+                  />
+                </label>
+                <CountField
+                  setting={parametricConfig.topOption.shelvesCount}
+                  value={params[parametricConfig.topOption.shelvesCount.paramName]}
+                  onChange={(v) => setParams((p) => ({ ...p, [parametricConfig.topOption.shelvesCount.paramName]: v }))}
+                />
+              </>
             )}
           </div>
         </div>
@@ -168,7 +181,10 @@ function CountField({
         min={setting.min}
         max={setting.max}
         value={Number.isFinite(value) ? value : ""}
-        onChange={(e) => onChange(e.target.valueAsNumber)}
+        onChange={(e) => {
+          const v = e.target.valueAsNumber;
+          if (Number.isFinite(v)) onChange(v);
+        }}
         className="mt-1 w-full rounded border border-stone-300 px-2 py-1"
       />
     </label>

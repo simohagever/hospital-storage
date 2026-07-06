@@ -17,6 +17,7 @@ export function computeInternalGrid(
   // == null catches both null and undefined (rawHasTop is undefined when the param
   // is absent from the params map), falling back to the config default.
   const hasTop = rawHasTop == null ? config.topOption.defaultEnabled : rawHasTop !== 0;
+  const nShelves = hasTop ? readCount(params, config.topOption.shelvesCount) : 0;
   const topHeight = hasTop
     ? readNumber(params, config.topOption.heightParamName, config.topOption.defaultHeight)
     : 0;
@@ -50,8 +51,8 @@ export function computeInternalGrid(
   rows.push({ offset: y, size: ROW_DIVIDER, kind: "row-divider" });
   y += ROW_DIVIDER;
 
-  if (hasTop) {
-    rows.push({ offset: y, size: topHeight, kind: "top-shelf" });
+  if (hasTop && nShelves > 0) {
+    rows.push({ offset: y, size: topHeight, kind: "top-shelf", shelvesCount: nShelves });
   }
 
   return { columns, rows };

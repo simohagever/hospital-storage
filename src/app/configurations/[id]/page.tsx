@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ConfigurationClientSection } from "@/components/export/ConfigurationClientSection";
+
+// Module-scope so this schema is built once per process, not on every request.
+const paramsSchema = z.record(z.string(), z.number()).nullable();
 import { computeInternalGrid } from "@/lib/layout-engine/computeInternalGrid";
 import type { PlacedInstance } from "@/lib/layout-engine/types";
 import type { BomRow } from "@/lib/pdf/buildReport";
@@ -28,17 +31,45 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
     notFound();
   }
 
+  function formatParamsWithLabels(
+    product: { parametricConfig: unknown },
+    params: Record<string, number> | null,
+  ): string {
+    if (!params) return "";
+    const parsedConfig = ParametricConfigSchema.safeParse(product.parametricConfig);
+    if (!parsedConfig.success) {
+      return Object.entries(params).map(([k, v]) => `${k}: ${v}`).join(", ");
+    }
+    const cfg = parsedConfig.data;
+    const labelMap = new Map<string, string>([
+      [cfg.columns.paramName, cfg.columns.label],
+      [cfg.drawersPerColumn.paramName, cfg.drawersPerColumn.label],
+      [cfg.rows.paramName, cfg.rows.label],
+      [cfg.topOption.paramName, cfg.topOption.label],
+      [cfg.topOption.heightParamName, cfg.topOption.heightLabel],
+      [cfg.topOption.shelvesCount.paramName, cfg.topOption.shelvesCount.label],
+    ]);
+    return Object.entries(params)
+      .map(([k, v]) => {
+        const label = labelMap.get(k) ?? k;
+        return k === cfg.topOption.paramName ? `${label}: ${v ? "Yes" : "No"}` : `${label}: ${v}`;
+      })
+      .join(", ");
+  }
+
   const placements: PlacedInstance[] = configuration.items.flatMap((item) => {
     // Compute the internal structural grid for parametric items so the 2D elevation
     // can draw column/row dividers and annotate each section's dimensions.
     const parsedConfig = ParametricConfigSchema.safeParse(item.product.parametricConfig);
-    const grid =
-      item.product.dimensionType === "PARAMETRIC" && parsedConfig.success
-        ? computeInternalGrid(
-            parsedConfig.data,
-            item.params as Record<string, number> | null,
-          )
-        : undefined;
+    const parsedParams = paramsSchema.safeParse(item.params);
+    let grid: PlacedInstance["grid"];
+    if (item.product.dimensionType === "PARAMETRIC" && parsedConfig.success) {
+      try {
+        grid = computeInternalGrid(parsedConfig.data, parsedParams.success ? parsedParams.data : null);
+      } catch {
+        // Corrupted params — skip the grid breakdown, render a flat box instead.
+      }
+    }
 
     return item.placedItemInstances.map((instance) => ({
       instanceKey: instance.instanceKey,
@@ -65,21 +96,17 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
   // Serialisable BOM data for the PDF export button (client component)
   const bom: BomRow[] = configuration.items.map((item) => {
     const first = item.placedItemInstances[0];
-    const paramsRecord =
-      item.params !== null && typeof item.params === "object" && !Array.isArray(item.params)
-        ? (item.params as Record<string, number>)
-        : null;
-    const paramsStr = paramsRecord
-      ? Object.entries(paramsRecord)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(", ")
-      : "";
+    const parsedParams = paramsSchema.safeParse(item.params);
+    const paramsRecord = parsedParams.success ? parsedParams.data : null;
+    const paramsStr = formatParamsWithLabels(item.product, paramsRecord);
     return {
       name: item.product.name,
       qty: item.quantity,
       placed: item.placedItemInstances.length,
-      width: first?.actualWidth ?? 0,
-      height: first?.actualHeight ?? 0,
+      // Use the placed instance's snapshotted dimensions; fall back to the
+      // product's own stored width/height for items that didn't fit (no instances).
+      width: first?.actualWidth ?? item.product.width ?? 0,
+      height: first?.actualHeight ?? item.product.height ?? 0,
       depth: item.product.depth,
       params: paramsStr,
     };
@@ -123,16 +150,35 @@ export default async function ConfigurationDetailPage({ params }: { params: Prom
 
       <h2 className="mt-8 text-lg font-semibold">Bill of materials</h2>
       <ul className="mt-2 divide-y divide-stone-200">
-        {configuration.items.map((item) => (
-          <li key={item.id} className="py-2 text-sm">
-            {item.product.name} × {item.quantity} ({item.placedItemInstances.length} placed) — depth{" "}
-            {item.product.depth.toFixed(2)}m
-          </li>
-        ))}
+        {configuration.items.map((item) => {
+          const first = item.placedItemInstances[0];
+          const parsedPs = paramsSchema.safeParse(item.params);
+          const paramsRecord = parsedPs.success ? parsedPs.data : null;
+          const paramsSummary = formatParamsWithLabels(item.product, paramsRecord);
+          const w = first?.actualWidth ?? item.product.width;
+          const h = first?.actualHeight ?? item.product.height;
+          return (
+            <li key={item.id} className="py-2 text-sm">
+              <span className="font-medium">{item.product.name}</span>
+              {" × "}{item.quantity}
+              {item.placedItemInstances.length !== item.quantity && (
+                <span className="ml-1 text-stone-400">({item.placedItemInstances.length} placed)</span>
+              )}
+              {w != null && h != null && (
+                <span className="ml-2 text-stone-500">
+                  {w.toFixed(3)}m × {h.toFixed(3)}m × {item.product.depth.toFixed(3)}m
+                </span>
+              )}
+              {paramsSummary && (
+                <span className="ml-2 text-stone-400">— {paramsSummary}</span>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <div className="mt-8 flex items-center gap-4 border-t border-stone-200 pt-6">
-        <Link href="/" className="text-sm text-stone-500 hover:underline">
+        <Link href="/configurations" className="text-sm text-stone-500 hover:underline">
           ← All configurations
         </Link>
         <Link href="/configurations/new" className="text-sm text-stone-500 hover:underline">
