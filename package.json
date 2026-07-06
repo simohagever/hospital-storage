@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "prisma generate && next build",
-    "start": "prisma migrate deploy && next start -p ${PORT:-3000}",
+    "start": "prisma migrate deploy && next start",
     "lint": "eslint",
     "test": "vitest run"
   },
