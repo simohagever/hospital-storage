@@ -6,9 +6,12 @@ declare global {
 }
 
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL;
+  const url =
+    process.env.DATABASE_URL ??
+    process.env.POSTGRES_URL ??
+    process.env.DATABASE_PRIVATE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL environment variable is not set. Add it to your .env file.");
+    throw new Error("No database URL found. Set DATABASE_URL in your environment (or POSTGRES_URL / DATABASE_PRIVATE_URL on Railway).");
   }
   const adapter = new PrismaPg({ connectionString: url });
   return new PrismaClient({ adapter });
